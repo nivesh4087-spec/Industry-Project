@@ -84,38 +84,18 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
             display_df.columns = ["Rank", "Feature", "Mean |SHAP|", "Contribution %"]
             st.dataframe(display_df, use_container_width=True, hide_index=True)
 
-        # Show saved SHAP plots if available
-        figures_dir = project_root / config["artifacts"]["figures_dir"]
-
-        col1, col2 = st.columns(2)
-        with col1:
-            shap_summary_path = figures_dir / "shap_summary.png"
-            if shap_summary_path.exists():
-                st.image(str(shap_summary_path),
-                         caption="SHAP Beeswarm Plot — Each dot is a sample, "
-                                 "color = feature value, position = SHAP impact",
-                         use_container_width=True)
-            else:
-                st.info("SHAP summary plot not yet generated. Run the training pipeline.")
-
-        with col2:
-            shap_bar_path = figures_dir / "shap_bar.png"
-            if shap_bar_path.exists():
-                st.image(str(shap_bar_path),
-                         caption="SHAP Bar Plot — Average feature importance",
-                         use_container_width=True)
-
         st.markdown("""
         <div class="disclaimer">
-            <strong>How to read SHAP plots:</strong>
+            <strong>Understanding Global SHAP Feature Importance:</strong>
             <ul style="margin: 4px 0;">
-                <li><strong>Beeswarm:</strong> Each dot = one sample. Red = high feature value, Blue = low.
-                    Position on x-axis = impact on prediction.</li>
-                <li><strong>Bar:</strong> Average absolute SHAP value per feature. Higher = more important.</li>
-                <li>SHAP values are <em>additive</em>: the sum of all SHAP values + base value = model output.</li>
+                <li>The interactive bar chart above displays the average absolute SHAP values for each feature.</li>
+                <li><strong>Mean |SHAP Value|</strong>: Measures the overall impact of a feature on the model's predictions. A higher value indicates that the feature is more influential in predicting equipment failure.</li>
+                <li><strong>Contribution %</strong>: The relative importance of each feature normalized as a percentage of total model impact.</li>
+                <li>SHAP values are mathematically robust, derived from cooperative game theory, ensuring fair credit assignment to each feature.</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
+
 
     # ========================================================================
     # TAB 2 — Local Explainability

@@ -272,7 +272,8 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
         XAI Predictive Maintenance System v2.0.0 |
         AI4I 2020 Dataset | SHAP Explainability |
         Smart Ceiling Fan Manufacturing — Conceptual Mapping<br>
-        Built for academic project evaluation — B.Tech Computer Engineering
+        Enterprise Predictive Maintenance Solution | Powered by Advanced Explainable AI
     </div>
     """, unsafe_allow_html=True)
+
 

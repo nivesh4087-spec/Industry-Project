@@ -1,9 +1,9 @@
 """
-XAI Predictive Maintenance Dashboard
+XAI Predictive Maintenance Platform
 ======================================
 Main Streamlit application entry point.
 
-Industrial AI Command Center for Explainable Predictive Maintenance.
+Enterprise-grade Industrial AI Command Center for Explainable Predictive Maintenance.
 
 Usage:
     streamlit run app/main.py
@@ -35,7 +35,7 @@ logging.basicConfig(level=logging.WARNING)
 
 # Page configuration — must be first Streamlit command
 st.set_page_config(
-    page_title="XAI Predictive Maintenance | Industrial AI",
+    page_title="XAI Predictive Maintenance | Industrial AI Platform",
     page_icon="🏭",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -171,16 +171,17 @@ def render_sidebar():
                 <strong style="color: #94a3b8;">Model</strong>: Best Selected
             </div>
             <div style="margin-top: 6px; font-size: 0.62rem; color: #475569;">
-                Last loaded: {datetime.now().strftime("%H:%M:%S")}
+                Session started: {datetime.now().strftime("%H:%M:%S")}
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("""
         <div class="disclaimer" style="margin-top: 20px;">
-            ⚠️ This system provides AI-generated decision-support.
-            Predictions are model estimates, not guaranteed outcomes.
-            The AI4I 2020 dataset is synthetic. Industry mapping is conceptual.
+            ⚠️ This platform provides AI-generated decision-support.
+            Predictions are calibrated model estimates. The AI4I 2020 dataset
+            is synthetic — intended as a demonstration of the methodology.
+            Always verify with qualified maintenance personnel.
         </div>
         """, unsafe_allow_html=True)
 
@@ -197,31 +198,32 @@ def main():
 
     try:
         if page == "Executive Overview":
-            from app.pages.p1_executive_overview import render_page
+            from app.pages.executive_overview import render_page
             render_page(project_root, load_artifacts, load_raw_dataset, load_results_json)
 
         elif page == "Risk Predictor":
-            from app.pages.p2_risk_predictor import render_page
+            from app.pages.risk_predictor import render_page
             render_page(project_root, load_artifacts, load_raw_dataset)
 
         elif page == "Explainable AI":
-            from app.pages.p3_explainable_ai import render_page
+            from app.pages.explainable_ai import render_page
             render_page(project_root, load_artifacts, load_raw_dataset, load_results_json)
 
         elif page == "Model Comparison":
-            from app.pages.p4_model_comparison import render_page
-            render_page(project_root, load_artifacts, load_results_json)
+            from app.pages.model_comparison import render_page
+            render_page(project_root, load_artifacts, load_results_json, load_raw_dataset)
+
 
         elif page == "Data Explorer":
-            from app.pages.p5_data_explorer import render_page
+            from app.pages.data_explorer import render_page
             render_page(project_root, load_raw_dataset)
 
         elif page == "Upload & Predict":
-            from app.pages.p7_upload_predict import render_page
+            from app.pages.upload_predict import render_page
             render_page(project_root, load_artifacts)
 
         elif page == "Monitoring & Alerts":
-            from app.pages.p6_monitoring_alerts import render_page
+            from app.pages.monitoring_alerts import render_page
             render_page(project_root)
 
     except FileNotFoundError as e:
@@ -229,7 +231,6 @@ def main():
         **Model artifacts not found.** Please run the training pipeline first:
 
         ```bash
-        cd {project_root}
         python scripts/train_pipeline.py
         ```
 

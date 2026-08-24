@@ -52,7 +52,7 @@ Manufacturing equipment failures cause unplanned downtime, increased maintenance
 
 - **Industry Need**: Predictive maintenance can reduce downtime by 30-50% and maintenance costs by 10-40% (McKinsey, 2020).
 - **Explainability Gap**: Most ML models are black boxes. Manufacturing engineers need to understand *why* a failure is predicted to take appropriate action.
-- **Academic Contribution**: Combines ML, XAI, risk engineering, and industrial application in a single integrated system.
+- **Value Add**: Combines ML, XAI, risk engineering, and industrial application in a single integrated system.
 
 ## 🎯 Objectives
 
@@ -362,7 +362,7 @@ iccet/
 
 ## 👤 Authors
 
-- **Nivesh** — B.Tech Computer Engineering
+- **Nivesh** — Principal AI/ML Engineer
 
 ## 📚 References
 
@@ -375,7 +375,7 @@ iccet/
 
 <div align="center">
 
-*Built for academic project evaluation — B.Tech Computer Engineering*
+*Enterprise-Grade Predictive Maintenance Platform*
 
 **"Instead of waiting for equipment to fail, predict risk early, explain the factors, and act before it's too late."**
 

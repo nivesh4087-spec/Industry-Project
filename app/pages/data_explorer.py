@@ -186,12 +186,8 @@ def render_page(project_root, load_dataset_fn):
     with tabs[2]:
         st.markdown("### Feature Correlation Heatmap")
 
-        figures_dir = project_root / "reports" / "figures"
-        corr_path = figures_dir / "correlation_heatmap.png"
-        if corr_path.exists():
-            st.image(str(corr_path), use_container_width=True)
-
         # Interactive correlation
+
         numerical_df = df[numerical_cols + [target_col]].copy()
         corr = numerical_df.corr()
 
