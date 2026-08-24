@@ -21,14 +21,39 @@ def render_page(project_root, load_dataset_fn):
         "Interactive exploration of the AI4I 2020 Predictive Maintenance Dataset"
     ), unsafe_allow_html=True)
 
+    # Dataset source selection
+    has_uploaded = "uploaded_dataset" in st.session_state
+    if has_uploaded:
+        source = st.radio(
+            "Select Dataset",
+            ["📦 Built-in (AI4I 2020)", f"📂 Uploaded ({st.session_state.get('uploaded_filename', 'file')})"],
+            horizontal=True,
+        )
+        use_uploaded = "Uploaded" in source
+    else:
+        use_uploaded = False
+
     # Load dataset
     try:
-        df = load_dataset_fn()
+        if use_uploaded:
+            df = st.session_state["uploaded_dataset"]
+            st.success(f"🔍 Exploring uploaded dataset: **{st.session_state.get('uploaded_filename', 'unknown')}** ({len(df):,} rows)")
+        else:
+            df = load_dataset_fn()
     except Exception as e:
         st.error(f"Failed to load dataset: {e}")
         return
 
+    # Detect available columns dynamically
+    all_columns = list(df.columns)
+    numerical_cols_detected = df.select_dtypes(include=["int64", "float64", "int32", "float32"]).columns.tolist()
+    target_col_default = "Machine failure"
+
+    # Check if standard target column exists
+    target_col = target_col_default if target_col_default in df.columns else None
+
     tabs = st.tabs(["📋 Dataset Overview", "📊 Feature Analysis", "🔗 Correlations", "🎛️ Interactive Filter"])
+
 
     # ========================================================================
     # TAB 1 — Dataset Overview

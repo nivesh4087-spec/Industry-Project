@@ -7,8 +7,10 @@ Dashboard home page with KPI cards, system status, and model performance summary
 import streamlit as st
 import json
 from pathlib import Path
+from datetime import datetime
 
 from app.components.styles import render_kpi_card, render_header_banner
+
 
 
 def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_fn):
@@ -16,8 +18,10 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
 
     st.markdown(render_header_banner(
         "Executive Overview",
-        "AI-Powered Predictive Maintenance Command Center — Smart Ceiling Fan Manufacturing"
+        "AI-Powered Predictive Maintenance Command Center — Smart Ceiling Fan Manufacturing",
+        f"Dashboard loaded at {datetime.now().strftime('%H:%M:%S')} • {datetime.now().strftime('%B %d, %Y')}"
     ), unsafe_allow_html=True)
+
 
     # Load data
     try:
@@ -265,9 +269,10 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
     # Footer
     st.markdown("""
     <div class="footer">
-        XAI Predictive Maintenance System v1.0.0 |
+        XAI Predictive Maintenance System v2.0.0 |
         AI4I 2020 Dataset | SHAP Explainability |
         Smart Ceiling Fan Manufacturing — Conceptual Mapping<br>
         Built for academic project evaluation — B.Tech Computer Engineering
     </div>
     """, unsafe_allow_html=True)
+

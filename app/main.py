@@ -6,12 +6,13 @@ Main Streamlit application entry point.
 Industrial AI Command Center for Explainable Predictive Maintenance.
 
 Usage:
-    streamlit run app/app.py
+    streamlit run app/main.py
 """
 
 import sys
 import os
 from pathlib import Path
+from datetime import datetime
 
 # Add project root to Python path and remove app directory to avoid module shadowing
 project_root = Path(__file__).resolve().parent.parent
@@ -40,7 +41,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from app.components.styles import get_custom_css, render_header_banner
+from app.components.styles import get_custom_css, render_header_banner, render_status_badge
 
 # Inject custom CSS
 st.markdown(get_custom_css(), unsafe_allow_html=True)
@@ -104,20 +105,24 @@ init_session_state()
 def render_sidebar():
     """Render the sidebar navigation."""
     with st.sidebar:
+        # Brand header
         st.markdown("""
-        <div style="text-align: center; padding: 16px 0 8px 0;">
-            <div style="font-size: 2.5rem;">🏭</div>
-            <div style="font-size: 1.1rem; font-weight: 800; color: #e2e8f0;
-                        letter-spacing: -0.02em; margin-top: 4px;">
+        <div style="text-align: center; padding: 20px 0 12px 0;">
+            <div style="font-size: 2.8rem; filter: drop-shadow(0 0 8px rgba(59,130,246,0.3));">🏭</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #e2e8f0;
+                        letter-spacing: -0.02em; margin-top: 6px;">
                 XAI Predictive
             </div>
-            <div style="font-size: 1.1rem; font-weight: 800; color: #3b82f6;
+            <div style="font-size: 1.15rem; font-weight: 800;
+                        background: linear-gradient(135deg, #3b82f6, #06b6d4);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
                         letter-spacing: -0.02em;">
                 Maintenance
             </div>
-            <div style="font-size: 0.65rem; color: #64748b; margin-top: 4px;
-                        letter-spacing: 0.1em; text-transform: uppercase;">
-                Industrial AI Platform
+            <div style="font-size: 0.6rem; color: #64748b; margin-top: 6px;
+                        letter-spacing: 0.12em; text-transform: uppercase;">
+                Industrial AI Platform v2.0
             </div>
         </div>
         <hr style="border-color: #2a3a4e; margin: 12px 0;">
@@ -130,6 +135,7 @@ def render_sidebar():
             "🔍 Explainable AI": "Explainable AI",
             "📈 Model Comparison": "Model Comparison",
             "🗂️ Data Explorer": "Data Explorer",
+            "📤 Upload & Predict": "Upload & Predict",
             "🔔 Monitoring & Alerts": "Monitoring & Alerts",
         }
 
@@ -142,20 +148,30 @@ def render_sidebar():
 
         st.markdown("<hr style='border-color: #2a3a4e;'>", unsafe_allow_html=True)
 
-        # System info
-        st.markdown("""
+        # System info — dynamic
+        has_upload = "uploaded_dataset" in st.session_state
+        upload_indicator = (
+            f'<div style="color: #22c55e;">📂 Custom Data Loaded</div>'
+            if has_upload else
+            f'<div>📦 AI4I 2020 Dataset</div>'
+        )
+
+        st.markdown(f"""
         <div style="font-size: 0.7rem; color: #64748b; padding: 0 8px;">
-            <div style="margin-bottom: 6px;">
+            <div style="margin-bottom: 8px;">
                 <strong style="color: #94a3b8;">System Status</strong>
             </div>
             <div>🟢 Model Loaded</div>
-            <div>📦 AI4I 2020 Dataset</div>
+            {upload_indicator}
             <div>🔬 SHAP Engine Active</div>
-            <div style="margin-top: 8px;">
-                <strong style="color: #94a3b8;">Version</strong>: 1.0.0
+            <div style="margin-top: 10px;">
+                <strong style="color: #94a3b8;">Version</strong>: 2.0.0
             </div>
             <div>
                 <strong style="color: #94a3b8;">Model</strong>: Best Selected
+            </div>
+            <div style="margin-top: 6px; font-size: 0.62rem; color: #475569;">
+                Last loaded: {datetime.now().strftime("%H:%M:%S")}
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -199,6 +215,10 @@ def main():
         elif page == "Data Explorer":
             from app.pages.p5_data_explorer import render_page
             render_page(project_root, load_raw_dataset)
+
+        elif page == "Upload & Predict":
+            from app.pages.p7_upload_predict import render_page
+            render_page(project_root, load_artifacts)
 
         elif page == "Monitoring & Alerts":
             from app.pages.p6_monitoring_alerts import render_page
