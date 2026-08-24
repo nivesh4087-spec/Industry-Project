@@ -1,0 +1,273 @@
+# ============================================================================
+# Explainable AI-Based Manufacturing Failure Prediction System
+# Central Configuration
+# ============================================================================
+
+project:
+  name: "XAI Predictive Maintenance System"
+  version: "1.0.0"
+  description: "Explainable AI-Based Manufacturing Failure Prediction for Smart Ceiling Fan Production"
+  author: "Nivesh"
+  random_seed: 42
+
+# --- Dataset Configuration ---
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  dataset_url: "https://archive.ics.uci.edu/static/public/601/ai4i+2020+predictive+maintenance+dataset.zip"
+  dataset_filename: "ai4i2020.csv"
+  target_column: "Machine failure"
+  # Columns that leak the target (individual failure modes)
+  leakage_columns:
+    - "TWF"
+    - "HDF"
+    - "PWF"
+    - "OSF"
+    - "RNF"
+  # Non-predictive identifier columns
+  id_columns:
+    - "UDI"
+    - "UID"
+    - "Product ID"
+  # Feature column names (from raw dataset)
+  feature_columns:
+    - "Type"
+    - "Air temperature [K]"
+    - "Process temperature [K]"
+    - "Rotational speed [rpm]"
+    - "Torque [Nm]"
+    - "Tool wear [min]"
+  # Renamed feature columns (clean names for internal use)
+  feature_names:
+    "Type": "type"
+    "Air temperature [K]": "air_temp_k"
+    "Air temperature": "air_temp_k"
+    "Process temperature [K]": "process_temp_k"
+    "Process temperature": "process_temp_k"
+    "Rotational speed [rpm]": "rotational_speed_rpm"
+    "Rotational speed": "rotational_speed_rpm"
+    "Torque [Nm]": "torque_nm"
+    "Torque": "torque_nm"
+    "Tool wear [min]": "tool_wear_min"
+    "Tool wear": "tool_wear_min"
+    "Machine failure": "machine_failure"
+
+# --- Splitting Configuration ---
+splitting:
+  test_size: 0.15
+  val_size: 0.15  # of remaining after test split
+  stratify: true
+
+# --- Preprocessing Configuration ---
+preprocessing:
+  type_encoding:
+    L: 0
+    M: 1
+    H: 2
+  scaling_method: "standard"  # standard | minmax | robust
+  numerical_features:
+    - "air_temp_k"
+    - "process_temp_k"
+    - "rotational_speed_rpm"
+    - "torque_nm"
+    - "tool_wear_min"
+
+# --- Feature Engineering ---
+features:
+  engineered:
+    temp_diff:
+      formula: "process_temp_k - air_temp_k"
+      description: "Temperature difference — heat dissipation indicator"
+    power:
+      formula: "torque_nm * rotational_speed_rpm * 2 * pi / 60"
+      description: "Mechanical power output (Watts)"
+    torque_per_rpm:
+      formula: "torque_nm / rotational_speed_rpm"
+      description: "Load efficiency — torque normalized by speed"
+    strain:
+      formula: "tool_wear_min * torque_nm"
+      description: "Combined mechanical strain indicator"
+    power_factor:
+      formula: "torque_nm * rotational_speed_rpm"
+      description: "Power approximation (proportional to mechanical power)"
+    temp_rpm_interaction:
+      formula: "temp_diff * rotational_speed_rpm"
+      description: "Thermal-speed stress interaction"
+  tool_wear_bins:
+    boundaries: [0, 50, 100, 175, 250]
+    labels: ["low", "medium", "high", "critical"]
+  percentile_thresholds:
+    high_torque: 75
+    low_speed: 25
+
+# --- Class Imbalance ---
+imbalance:
+  strategy: "class_weight"  # class_weight | smote | none
+  smote:
+    sampling_strategy: "auto"
+    k_neighbors: 5
+
+# --- Model Training ---
+models:
+  logistic_regression:
+    enabled: true
+    params:
+      max_iter: 1000
+      solver: "lbfgs"
+    hyperparam_grid:
+      C: [0.01, 0.1, 1.0, 10.0, 100.0]
+      penalty: ["l2"]
+      class_weight: ["balanced", null]
+
+  random_forest:
+    enabled: true
+    params:
+      n_jobs: -1
+    hyperparam_grid:
+      n_estimators: [100, 200, 300, 500]
+      max_depth: [5, 10, 15, 20, null]
+      min_samples_split: [2, 5, 10]
+      min_samples_leaf: [1, 2, 4]
+      class_weight: ["balanced", "balanced_subsample"]
+      max_features: ["sqrt", "log2"]
+
+  xgboost:
+    enabled: true
+    params:
+      use_label_encoder: false
+      eval_metric: "logloss"
+      verbosity: 0
+    hyperparam_grid:
+      n_estimators: [100, 200, 300, 500]
+      max_depth: [3, 5, 7, 9]
+      learning_rate: [0.01, 0.05, 0.1, 0.2]
+      min_child_weight: [1, 3, 5]
+      subsample: [0.7, 0.8, 0.9, 1.0]
+      colsample_bytree: [0.7, 0.8, 0.9, 1.0]
+      scale_pos_weight: [1, 10, 20, 29]  # ~ratio of negatives/positives
+      gamma: [0, 0.1, 0.2]
+
+  hist_gradient_boosting:
+    enabled: true
+    params: {}
+    hyperparam_grid:
+      max_iter: [100, 200, 300, 500]
+      max_depth: [3, 5, 7, 10, null]
+      learning_rate: [0.01, 0.05, 0.1, 0.2]
+      min_samples_leaf: [5, 10, 20, 50]
+      max_leaf_nodes: [15, 31, 63, null]
+      class_weight: ["balanced", null]
+
+# --- Hyperparameter Optimization ---
+hpo:
+  method: "randomized"  # randomized | grid
+  n_iter: 50
+  cv_folds: 5
+  scoring: "f1"
+  n_jobs: -1
+
+# --- Calibration ---
+calibration:
+  method: "isotonic"  # isotonic | sigmoid
+  cv_folds: 5
+
+# --- Model Selection ---
+selection:
+  primary_metric: "f1"
+  secondary_metric: "pr_auc"
+
+# --- Risk Scoring ---
+risk:
+  # Non-linear transform exponent
+  transform_exponent: 0.85
+  thresholds:
+    low: 30
+    moderate: 60
+    high: 80
+    critical: 100
+  categories:
+    low:
+      label: "LOW RISK"
+      color: "#22c55e"
+      emoji: "🟢"
+    moderate:
+      label: "MODERATE RISK"
+      color: "#eab308"
+      emoji: "🟡"
+    high:
+      label: "HIGH RISK"
+      color: "#f97316"
+      emoji: "🟠"
+    critical:
+      label: "CRITICAL RISK"
+      color: "#ef4444"
+      emoji: "🔴"
+
+# --- Early Warning ---
+early_warning:
+  threshold: 60  # risk score threshold for alerts
+  max_history: 500  # max prediction history entries
+
+# --- SHAP Configuration ---
+shap:
+  background_samples: 150
+  max_display_features: 10
+  cache_enabled: true
+
+# --- Model Artifacts ---
+artifacts:
+  model_dir: "models"
+  figures_dir: "reports/figures"
+  results_dir: "reports/results"
+
+# --- Ceiling Fan Manufacturing Mapping ---
+industry_mapping:
+  "air_temp_k": "Ambient Factory Floor Temperature"
+  "process_temp_k": "Motor Winding / Assembly Station Temperature"
+  "rotational_speed_rpm": "Fan Motor Test RPM During Quality Check"
+  "torque_nm": "Motor Shaft Torque During Blade Assembly"
+  "tool_wear_min": "Pressing/Cutting Tool Wear in Blade Stamping"
+  "type": "Product Quality Tier (Economy/Standard/Premium)"
+  "temp_diff": "Heat Dissipation Between Motor and Ambient"
+  "power": "Motor Power Output During Testing"
+  "torque_per_rpm": "Load Efficiency of Assembly Motor"
+  "strain": "Combined Tool-Mechanical Stress"
+  "power_factor": "Power Approximation During QC Test"
+  "temp_rpm_interaction": "Thermal-Speed Stress on Motor"
+  "tool_wear_severity": "Tool Condition Category"
+  "is_high_torque": "High-Load Assembly Flag"
+  "is_low_speed": "Low-Speed Motor Anomaly Flag"
+  "overload_indicator": "Motor Overstrain Detection"
+
+# --- Demo Scenarios ---
+demo_scenarios:
+  normal:
+    name: "Normal Operation"
+    description: "Machine operating within normal parameters"
+    values:
+      air_temp_k: 298.5
+      process_temp_k: 308.7
+      rotational_speed_rpm: 1500
+      torque_nm: 40.0
+      tool_wear_min: 30
+      type: 1  # M
+  moderate_risk:
+    name: "Moderate Risk"
+    description: "Elevated tool wear and slightly high torque"
+    values:
+      air_temp_k: 300.0
+      process_temp_k: 311.5
+      rotational_speed_rpm: 1300
+      torque_nm: 55.0
+      tool_wear_min: 150
+      type: 0  # L
+  critical_risk:
+    name: "Critical Risk"
+    description: "High torque, excessive tool wear, abnormal temperatures"
+    values:
+      air_temp_k: 302.0
+      process_temp_k: 314.0
+      rotational_speed_rpm: 1100
+      torque_nm: 72.0
+      tool_wear_min: 220
+      type: 0  # L

@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (raw data should be downloaded, not committed)
+data/raw/*.csv
+data/raw/*.zip
+data/processed/*.csv
+data/processed/*.pkl
+
+# Model artifacts (too large for git)
+models/*.joblib
+models/*.pkl
+models/*.json
+
+# Reports (generated)
+reports/figures/*.png
+reports/figures/*.svg
+reports/results/*.json
+reports/results/*.csv
+
+# Streamlit
+.streamlit/
+
+# Temp files
+*.tmp
+*.bak
+~$*
+
+# Logs
+*.log
