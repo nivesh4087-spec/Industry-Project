@@ -13,9 +13,17 @@ import sys
 import os
 from pathlib import Path
 
-# Add project root to Python path
+# Add project root to Python path and remove app directory to avoid module shadowing
 project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
+app_dir = str(Path(__file__).resolve().parent)
+if app_dir in sys.path:
+    sys.path.remove(app_dir)
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+else:
+    sys.path.remove(str(project_root))
+    sys.path.insert(0, str(project_root))
+
 
 import streamlit as st
 import json
