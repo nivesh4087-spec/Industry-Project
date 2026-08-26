@@ -190,7 +190,7 @@ def main():
 
         elif page == "Batch Fleet Analysis":
             from app.pages.upload_predict import render_page
-            render_page(project_root, load_artifacts)
+            render_page(project_root, load_artifacts, load_raw_dataset)
 
         elif page == "Fleet Alerts":
             from app.pages.monitoring_alerts import render_page

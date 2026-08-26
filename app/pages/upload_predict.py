@@ -97,12 +97,12 @@ def auto_map_columns(upload_columns: list) -> dict:
     return mapping
 
 
-def render_page(project_root, load_artifacts_fn):
+def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
     """Render the Upload & Predict page."""
 
     st.markdown(render_header_banner(
-        "Upload & Predict",
-        "Upload your own dataset for batch failure risk prediction using the trained AI model",
+        "Batch Fleet Analysis",
+        "Upload equipment sensor datasets or run sample fleet telemetry for batch predictive failure analysis",
         f"Powered by pre-trained XAI model • {datetime.now().strftime('%B %d, %Y')}"
     ), unsafe_allow_html=True)
 
@@ -119,31 +119,115 @@ def render_page(project_root, load_artifacts_fn):
         st.error(f"⚠️ Model not loaded: {e}. Run `python scripts/train_pipeline.py` first.")
         return
 
+    # Create template CSV helper
+    sample_df = pd.DataFrame([
+        {
+            "UDI": 1,
+            "Product ID": "M14860",
+            "Type": "M",
+            "Air temperature [K]": 298.1,
+            "Process temperature [K]": 308.6,
+            "Rotational speed [rpm]": 1551,
+            "Torque [Nm]": 42.8,
+            "Tool wear [min]": 0
+        },
+        {
+            "UDI": 2,
+            "Product ID": "L47181",
+            "Type": "L",
+            "Air temperature [K]": 298.2,
+            "Process temperature [K]": 308.7,
+            "Rotational speed [rpm]": 1408,
+            "Torque [Nm]": 46.3,
+            "Tool wear [min]": 3
+        },
+        {
+            "UDI": 3,
+            "Product ID": "L47182",
+            "Type": "L",
+            "Air temperature [K]": 298.1,
+            "Process temperature [K]": 308.5,
+            "Rotational speed [rpm]": 1498,
+            "Torque [Nm]": 49.4,
+            "Tool wear [min]": 5
+        },
+        {
+            "UDI": 4,
+            "Product ID": "L47183",
+            "Type": "L",
+            "Air temperature [K]": 298.2,
+            "Process temperature [K]": 308.6,
+            "Rotational speed [rpm]": 1433,
+            "Torque [Nm]": 39.5,
+            "Tool wear [min]": 7
+        },
+        {
+            "UDI": 5,
+            "Product ID": "L47184",
+            "Type": "L",
+            "Air temperature [K]": 298.2,
+            "Process temperature [K]": 308.7,
+            "Rotational speed [rpm]": 1408,
+            "Torque [Nm]": 40.0,
+            "Tool wear [min]": 9
+        }
+    ])
+    sample_csv = sample_df.to_csv(index=False)
+
+    # Quick action banner (load demo dataset or download template)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 📥 Select Data Input Source")
+    st.write("You can upload a custom file, download a formatted CSV template, or automatically load a sample production fleet batch dataset for instant analysis.")
+
+    btn_col1, btn_col2 = st.columns(2)
+    with btn_col1:
+        st.download_button(
+            label="📄 Download CSV Template",
+            data=sample_csv,
+            file_name="fleet_sensor_template.csv",
+            mime="text/csv",
+            use_container_width=True,
+            help="Download a pre-formatted CSV template containing required sensor columns"
+        )
+    with btn_col2:
+        if st.button("🚀 Load Sample Production Fleet Data (1,000 Assets)", use_container_width=True, type="secondary"):
+            if load_raw_dataset_fn is not None:
+                df_raw = load_raw_dataset_fn()
+                st.session_state["uploaded_dataset"] = df_raw.head(1000).copy()
+                st.session_state["uploaded_filename"] = "production_fleet_sample.csv"
+                st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # ========================================================================
     # FILE UPLOAD SECTION
     # ========================================================================
 
-    st.markdown("""
-    <div class="upload-zone">
-        <span class="upload-icon">📤</span>
-        <div class="upload-text">Drop your dataset below</div>
-        <div class="upload-hint">Supports CSV and Excel files • Maximum 200MB</div>
-    </div>
-    """, unsafe_allow_html=True)
-
     uploaded_file = st.file_uploader(
-        "Upload Dataset",
+        "Upload Dataset (CSV or Excel)",
         type=["csv", "xlsx", "xls"],
         help="Upload a CSV or Excel file containing machine sensor data",
-        label_visibility="collapsed",
     )
 
-    if uploaded_file is None:
-        # Show instructions when no file is uploaded
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.name.endswith((".xlsx", ".xls")):
+                df_uploaded = pd.read_excel(uploaded_file)
+            else:
+                df_uploaded = pd.read_csv(uploaded_file)
+            st.session_state["uploaded_dataset"] = df_uploaded
+            st.session_state["uploaded_filename"] = uploaded_file.name
+        except Exception as e:
+            st.error(f"❌ Failed to read file: {e}")
+            return
+
+    # Check if we have a dataset loaded either via file uploader or session state demo button
+    if "uploaded_dataset" not in st.session_state:
+        # Show instructions when no dataset is loaded
         st.markdown("---")
-        st.markdown("### 📋 Required Columns")
+        st.markdown("### 📋 Required Sensor Data Columns")
         st.markdown(
-            "Your dataset must contain the following columns "
+            "Your dataset must contain the following sensor columns "
             "(exact names or common aliases will be auto-detected):"
         )
 
@@ -165,11 +249,13 @@ def render_page(project_root, load_artifacts_fn):
 
         st.markdown("""
         <div class="disclaimer">
-            💡 <strong>Tip:</strong> The system auto-detects common column name variations.
-            If your columns have non-standard names, you'll be able to map them manually.
+            💡 <strong>Tip:</strong> You can click <strong>'Load Sample Production Fleet Data'</strong> above to test batch prediction instantly without uploading a file.
         </div>
         """, unsafe_allow_html=True)
         return
+
+    df_uploaded = st.session_state["uploaded_dataset"]
+    filename = st.session_state.get("uploaded_filename", "fleet_data.csv")
 
     # ========================================================================
     # FILE LOADED — Process
