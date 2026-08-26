@@ -155,6 +155,28 @@ def render_sidebar():
         </div>
         """, unsafe_allow_html=True)
 
+        st.markdown("<hr style='border-color: #232d3f;'>", unsafe_allow_html=True)
+        if st.button("❓ User Guide & Quick Tutorial", use_container_width=True):
+            st.session_state.show_tutorial = True
+
+        with st.expander("🗄️ Connect External Database"):
+            st.markdown("<div style='font-size:0.75rem; color:#94a3b8;'>Connect enterprise databases for real-time telemetry streaming:</div>", unsafe_allow_html=True)
+            db_type = st.selectbox("Database Type", ["PostgreSQL", "MySQL", "SQLite", "MongoDB", "Snowflake", "Oracle"], key="sidebar_db_type")
+            conn_str = st.text_input("Connection URI", placeholder="postgresql://user:pass@localhost:5432/mydb", key="sidebar_conn_str")
+            query_str = st.text_input("Table / SQL Query", value="SELECT * FROM telemetry_data LIMIT 1000", key="sidebar_query_str")
+            if st.button("Connect & Sync", key="sidebar_db_btn"):
+                if conn_str:
+                    try:
+                        from src.data.loader import load_from_database
+                        df_db = load_from_database(db_type, conn_str, query_str)
+                        st.session_state.uploaded_dataset = df_db
+                        st.success(f"Connected to {db_type}! Loaded {len(df_db)} records.")
+                        st.rerun()
+                    except Exception as err:
+                        st.error(f"Connection error: {err}")
+                else:
+                    st.warning("Please enter a valid Connection URI.")
+
         st.markdown("""
         <div style="margin-top: 20px; font-size: 0.68rem; color: #475569; border: 1px dashed #232d3f; padding: 10px; border-radius: 6px;">
             ℹ️ <strong>Industrial Telemetry Notice:</strong> Predictions are generated using calibrated ensemble models. Verify physical equipment prior to maintenance interventions.
@@ -165,9 +187,45 @@ def render_sidebar():
 # Page Router
 # ============================================================================
 
+@st.dialog("🚀 Welcome to Enterprise APM — Platform User Tutorial", width="large")
+def render_tutorial_dialog():
+    st.markdown("""
+    ### 🛡️ Welcome to your AI Predictive Maintenance Command Center!
+    This quick tutorial will guide you through the key modules and profile navigation so you can get started quickly:
+
+    ---
+    #### 1️⃣ ⚡ **Asset Health Monitor**
+    - High-level executive dashboard showing total fleet health, failure distribution, and active risk alerts.
+    - View health score distribution across your machine inventory.
+
+    #### 2️⃣ 🎯 **Predictive Risk Assessment**
+    - Perform single-asset real-time diagnosis.
+    - Adjust operational parameters (Temperatures, Rotational Speed, Torque, Tool Wear) to view immediate failure probability and maintenance recommendations.
+
+    #### 3️⃣ 🧠 **AI Diagnostics & SHAP**
+    - Deep-dive into model explainability.
+    - Understand **WHY** an asset is flagged for maintenance using global & local SHAP feature impact plots.
+
+    #### 4️⃣ 📤 **Batch Fleet Analysis & Database Integration**
+    - Upload custom CSV/Excel telemetry files or connect your external databases (PostgreSQL, MySQL, SQLite, Snowflake, MongoDB).
+    - Run batch predictions across thousands of assets simultaneously with standard column auto-mapping.
+
+    #### 5️⃣ 🔔 **Fleet Alerts & Financial ROI**
+    - Review critical threshold alerts and evaluate the financial ROI ($ savings) from prevented unplanned downtime.
+
+    ---
+    💡 *Tip: You can re-open this tutorial anytime from the sidebar standard menu!*
+    """)
+    if st.button("Got it! Let's get started", use_container_width=True, type="primary"):
+        st.session_state.show_tutorial = False
+        st.rerun()
+
 def main():
     """Main application — routes to selected page."""
     render_sidebar()
+
+    if st.session_state.get("show_tutorial", False):
+        render_tutorial_dialog()
 
     page = st.session_state.current_page
 

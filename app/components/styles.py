@@ -338,3 +338,9 @@ def render_header_banner(title: str, subtitle: str, meta: str = "") -> str:
 def render_status_badge(text: str, status: str = "info") -> str:
     """Generate HTML for a status badge."""
     return f'<span class="status-badge status-{status}">{text}</span>'
+
+def render_validation_item(text: str, is_valid: bool = True) -> str:
+    """Generate HTML for validation item in data check."""
+    icon = "✅" if is_valid else "⚠️"
+    color = "var(--accent-green)" if is_valid else "var(--accent-yellow)"
+    return f'<div style="margin: 4px 0; font-size: 0.88rem;"><span style="color:{color};">{icon}</span> {text}</div>'

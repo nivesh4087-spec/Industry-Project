@@ -177,6 +177,20 @@ def download_dataset(config: Dict[str, Any]) -> Path:
     return csv_path
 
 
+def load_from_database(db_type: str, connection_string: str, query_or_table: str) -> pd.DataFrame:
+    """Load dataset directly from an external database (PostgreSQL, MySQL, SQLite, MongoDB, Snowflake)."""
+    try:
+        import sqlalchemy
+        engine = sqlalchemy.create_engine(connection_string)
+        if query_or_table.strip().lower().startswith("select"):
+            df = pd.read_sql_query(query_or_table, engine)
+        else:
+            df = pd.read_sql_table(query_or_table, engine)
+        return df
+    except Exception as e:
+        logger.error("Failed to fetch data from database (%s): %s", db_type, e)
+        raise RuntimeError(f"Database Connection Error ({db_type}): {e}")
+
 def load_dataset(
     config: Dict[str, Any],
     filepath: Optional[str] = None

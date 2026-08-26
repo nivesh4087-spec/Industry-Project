@@ -1,14 +1,15 @@
+# -*- coding: utf-8 -*-
 """
-Upload & Predict Module
-=======================
-Upload custom CSV/Excel datasets for batch prediction using the trained model.
+Upload & Predict Module (Batch Fleet Analysis)
+==============================================
+Upload custom CSV/Excel datasets or use preloaded fleet telemetry for batch predictive failure analysis.
 
 Features:
-- Drag-and-drop file upload (CSV/Excel)
-- Automatic column detection and validation
-- Manual column mapping for non-standard datasets
-- Batch prediction with progress tracking
-- Results dashboard with KPIs, charts, and export
+- Drag-and-drop file upload (CSV/Excel) & preloaded fleet sample dataset button
+- CSV template download helper
+- Fast vectorized column mapping & batch feature engineering
+- Instant model inference & risk scoring
+- Persistent results dashboard with KPIs, charts, table, and CSV export
 """
 
 import streamlit as st
@@ -23,8 +24,7 @@ from app.components.styles import (
     render_status_badge, render_validation_item,
 )
 
-
-# Required columns for prediction (internal names → friendly labels)
+# Required columns for prediction (internal names -> friendly labels)
 REQUIRED_COLUMNS = {
     "air_temp_k": "Air Temperature [K]",
     "process_temp_k": "Process Temperature [K]",
@@ -63,17 +63,10 @@ COLUMN_ALIASES = {
 }
 
 
-def auto_map_columns(upload_columns: list) -> dict:
-    """Attempt to automatically map uploaded column names to internal names.
-
-    Args:
-        upload_columns: List of column names from the uploaded file.
-
-    Returns:
-        Dictionary mapping internal names to uploaded column names.
-    """
+def auto_map_columns(upload_columns):
+    """Attempt to automatically map uploaded column names to internal names."""
     mapping = {}
-    upload_lower = {c.lower().strip(): c for c in upload_columns}
+    upload_lower = {str(c).lower().strip(): c for c in upload_columns}
 
     for internal_name, aliases in COLUMN_ALIASES.items():
         # Exact match first
@@ -98,7 +91,7 @@ def auto_map_columns(upload_columns: list) -> dict:
 
 
 def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
-    """Render the Upload & Predict page."""
+    """Render the Batch Fleet Analysis / Upload & Predict page."""
 
     st.markdown(render_header_banner(
         "Batch Fleet Analysis",
@@ -119,65 +112,20 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
         st.error(f"⚠️ Model not loaded: {e}. Run `python scripts/train_pipeline.py` first.")
         return
 
-    # Create template CSV helper
+    # CSV Template Helper Data
     sample_df = pd.DataFrame([
-        {
-            "UDI": 1,
-            "Product ID": "M14860",
-            "Type": "M",
-            "Air temperature [K]": 298.1,
-            "Process temperature [K]": 308.6,
-            "Rotational speed [rpm]": 1551,
-            "Torque [Nm]": 42.8,
-            "Tool wear [min]": 0
-        },
-        {
-            "UDI": 2,
-            "Product ID": "L47181",
-            "Type": "L",
-            "Air temperature [K]": 298.2,
-            "Process temperature [K]": 308.7,
-            "Rotational speed [rpm]": 1408,
-            "Torque [Nm]": 46.3,
-            "Tool wear [min]": 3
-        },
-        {
-            "UDI": 3,
-            "Product ID": "L47182",
-            "Type": "L",
-            "Air temperature [K]": 298.1,
-            "Process temperature [K]": 308.5,
-            "Rotational speed [rpm]": 1498,
-            "Torque [Nm]": 49.4,
-            "Tool wear [min]": 5
-        },
-        {
-            "UDI": 4,
-            "Product ID": "L47183",
-            "Type": "L",
-            "Air temperature [K]": 298.2,
-            "Process temperature [K]": 308.6,
-            "Rotational speed [rpm]": 1433,
-            "Torque [Nm]": 39.5,
-            "Tool wear [min]": 7
-        },
-        {
-            "UDI": 5,
-            "Product ID": "L47184",
-            "Type": "L",
-            "Air temperature [K]": 298.2,
-            "Process temperature [K]": 308.7,
-            "Rotational speed [rpm]": 1408,
-            "Torque [Nm]": 40.0,
-            "Tool wear [min]": 9
-        }
+        {"UDI": 1, "Product ID": "M14860", "Type": "M", "Air temperature [K]": 298.1, "Process temperature [K]": 308.6, "Rotational speed [rpm]": 1551, "Torque [Nm]": 42.8, "Tool wear [min]": 0},
+        {"UDI": 2, "Product ID": "L47181", "Type": "L", "Air temperature [K]": 298.2, "Process temperature [K]": 308.7, "Rotational speed [rpm]": 1408, "Torque [Nm]": 46.3, "Tool wear [min]": 3},
+        {"UDI": 3, "Product ID": "L47182", "Type": "L", "Air temperature [K]": 298.1, "Process temperature [K]": 308.5, "Rotational speed [rpm]": 1498, "Torque [Nm]": 49.4, "Tool wear [min]": 5},
+        {"UDI": 4, "Product ID": "L47183", "Type": "L", "Air temperature [K]": 298.2, "Process temperature [K]": 308.6, "Rotational speed [rpm]": 1433, "Torque [Nm]": 39.5, "Tool wear [min]": 7},
+        {"UDI": 5, "Product ID": "L47184", "Type": "L", "Air temperature [K]": 298.2, "Process temperature [K]": 308.7, "Rotational speed [rpm]": 1408, "Torque [Nm]": 40.0, "Tool wear [min]": 9}
     ])
     sample_csv = sample_df.to_csv(index=False)
 
-    # Quick action banner (load demo dataset or download template)
+    # Input Option Section
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### 📥 Select Data Input Source")
-    st.write("You can upload a custom file, download a formatted CSV template, or automatically load a sample production fleet batch dataset for instant analysis.")
+    st.write("Upload a custom file, download a formatted CSV template, or automatically load sample production fleet dataset for instant batch analysis.")
 
     btn_col1, btn_col2 = st.columns(2)
     with btn_col1:
@@ -195,14 +143,13 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
                 df_raw = load_raw_dataset_fn()
                 st.session_state["uploaded_dataset"] = df_raw.head(1000).copy()
                 st.session_state["uploaded_filename"] = "production_fleet_sample.csv"
+                if "batch_results" in st.session_state:
+                    del st.session_state["batch_results"]
                 st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ========================================================================
-    # FILE UPLOAD SECTION
-    # ========================================================================
-
+    # File Uploader
     uploaded_file = st.file_uploader(
         "Upload Dataset (CSV or Excel)",
         type=["csv", "xlsx", "xls"],
@@ -217,13 +164,14 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
                 df_uploaded = pd.read_csv(uploaded_file)
             st.session_state["uploaded_dataset"] = df_uploaded
             st.session_state["uploaded_filename"] = uploaded_file.name
+            if "batch_results" in st.session_state:
+                del st.session_state["batch_results"]
         except Exception as e:
             st.error(f"❌ Failed to read file: {e}")
             return
 
-    # Check if we have a dataset loaded either via file uploader or session state demo button
+    # Check if a dataset exists in session state
     if "uploaded_dataset" not in st.session_state:
-        # Show instructions when no dataset is loaded
         st.markdown("---")
         st.markdown("### 📋 Required Sensor Data Columns")
         st.markdown(
@@ -249,7 +197,7 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
 
         st.markdown("""
         <div class="disclaimer">
-            💡 <strong>Tip:</strong> You can click <strong>'Load Sample Production Fleet Data'</strong> above to test batch prediction instantly without uploading a file.
+            💡 <strong>Tip:</strong> Click <strong>'Load Sample Production Fleet Data'</strong> above to test batch prediction instantly.
         </div>
         """, unsafe_allow_html=True)
         return
@@ -257,46 +205,23 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
     df_uploaded = st.session_state["uploaded_dataset"]
     filename = st.session_state.get("uploaded_filename", "fleet_data.csv")
 
-    # ========================================================================
-    # FILE LOADED — Process
-    # ========================================================================
-
-    # Read file
-    try:
-        if uploaded_file.name.endswith((".xlsx", ".xls")):
-            df_uploaded = pd.read_excel(uploaded_file)
-        else:
-            df_uploaded = pd.read_csv(uploaded_file)
-    except Exception as e:
-        st.error(f"❌ Failed to read file: {e}")
-        return
-
-    # Store in session state
-    st.session_state["uploaded_dataset"] = df_uploaded
-    st.session_state["uploaded_filename"] = uploaded_file.name
-
-    # File info
-    file_size_kb = uploaded_file.size / 1024
-    file_size_str = f"{file_size_kb:.1f} KB" if file_size_kb < 1024 else f"{file_size_kb/1024:.1f} MB"
-
+    # File Summary KPIs
     st.markdown("---")
-
-    # KPI cards for uploaded file
     fc1, fc2, fc3, fc4 = st.columns(4)
     with fc1:
         st.markdown(render_kpi_card(
-            "File Name", uploaded_file.name[:20],
-            f"Size: {file_size_str}", "blue"
+            "Dataset Source", filename[:20],
+            f"Active Batch File", "blue"
         ), unsafe_allow_html=True)
     with fc2:
         st.markdown(render_kpi_card(
             "Total Records", f"{len(df_uploaded):,}",
-            "Rows in dataset", "cyan"
+            "Equipment Rows", "cyan"
         ), unsafe_allow_html=True)
     with fc3:
         st.markdown(render_kpi_card(
             "Columns", f"{len(df_uploaded.columns)}",
-            "Features detected", "purple"
+            "Features Detected", "purple"
         ), unsafe_allow_html=True)
     with fc4:
         st.markdown(render_kpi_card(
@@ -306,16 +231,11 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ========================================================================
-    # COLUMN MAPPING & VALIDATION
-    # ========================================================================
-
+    # Column Mapping Section
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 🔗 Column Mapping & Validation")
+    st.markdown("### 🔗 Column Mapping & Schema Validation")
 
     auto_mapping = auto_map_columns(list(df_uploaded.columns))
-
-    # Show auto-detection results
     all_required_mapped = True
     mapping_final = {}
 
@@ -323,224 +243,193 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
 
     with col_map_left:
         st.markdown("**Auto-detected Mappings:**")
-
         for internal_name, label in {**REQUIRED_COLUMNS, **OPTIONAL_COLUMNS}.items():
             is_required = internal_name in REQUIRED_COLUMNS
 
             if internal_name in auto_mapping:
                 detected_col = auto_mapping[internal_name]
                 st.markdown(render_validation_item(
-                    f"**{label}** → `{detected_col}`",
+                    f"**{label}** -> `{detected_col}`",
                     True
                 ), unsafe_allow_html=True)
                 mapping_final[internal_name] = detected_col
             else:
                 if is_required:
                     st.markdown(render_validation_item(
-                        f"**{label}** — Not found (required)",
+                        f"**{label}** - Not found (required)",
                         False
                     ), unsafe_allow_html=True)
                     all_required_mapped = False
                 else:
                     st.markdown(render_validation_item(
-                        f"**{label}** — Not found (optional, will use default)",
+                        f"**{label}** - Not found (optional, default applied)",
                         True
                     ), unsafe_allow_html=True)
 
     with col_map_right:
-        st.markdown("**Preview (first 5 rows):**")
+        st.markdown("**Dataset Sample Preview:**")
         st.dataframe(
             df_uploaded.head(5),
             use_container_width=True,
             hide_index=True,
-            height=200,
+            height=180,
         )
 
-    # Manual column mapping if auto-detection failed
+    # Manual Column Mapping if needed
     if not all_required_mapped:
         st.markdown("---")
         st.markdown("#### ⚙️ Manual Column Mapping")
-        st.caption("Select the correct column from your dataset for each required field:")
+        st.caption("Select the corresponding column from your dataset for each required parameter:")
 
         upload_cols_with_none = ["-- Not available --"] + list(df_uploaded.columns)
-
         manual_cols = st.columns(3)
         for i, (internal_name, label) in enumerate(REQUIRED_COLUMNS.items()):
             if internal_name not in mapping_final:
                 with manual_cols[i % 3]:
                     selected = st.selectbox(
-                        f"Map → {label}",
+                        f"Map -> {label}",
                         upload_cols_with_none,
                         key=f"map_{internal_name}",
                     )
                     if selected != "-- Not available --":
                         mapping_final[internal_name] = selected
 
-        # Optional type column
         if "type" not in mapping_final:
             selected_type = st.selectbox(
-                "Map → Product Type (optional)",
+                "Map -> Product Type (optional)",
                 upload_cols_with_none,
                 key="map_type",
             )
             if selected_type != "-- Not available --":
                 mapping_final["type"] = selected_type
 
-    # Re-check all required columns are mapped
     all_required_mapped = all(k in mapping_final for k in REQUIRED_COLUMNS)
-
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ========================================================================
-    # BATCH PREDICTION
-    # ========================================================================
-
+    # Run Prediction Button
     st.markdown("---")
 
     if not all_required_mapped:
-        st.warning(
-            "⚠️ Not all required columns are mapped. "
-            "Please use the manual mapping above to assign the correct columns."
-        )
+        st.warning("⚠️ Please map all required columns before running batch predictions.")
         return
 
     predict_btn = st.button(
-        "🔮 Run Batch Predictions",
+        "🔮 Run Batch Predictions & Analysis",
         use_container_width=True,
         type="primary",
     )
 
     if predict_btn:
-        _run_batch_predictions(
+        _execute_fast_batch_predictions(
             df_uploaded, mapping_final, model, scaler, feature_stats,
-            feature_names, numerical_cols, config, best_name,
+            feature_names, numerical_cols, config, best_name
+        )
+
+    # Display Dashboard if batch results exist in session state
+    if "batch_results" in st.session_state:
+        _render_batch_results_dashboard(
+            df_uploaded, st.session_state["batch_results"], config, best_name
         )
 
 
-def _run_batch_predictions(
+def _execute_fast_batch_predictions(
     df_uploaded, mapping_final, model, scaler, feature_stats,
-    feature_names, numerical_cols, config, best_name,
+    feature_names, numerical_cols, config, best_name
 ):
-    """Run batch predictions on the uploaded dataset."""
+    """Execute high-speed vectorized batch prediction."""
 
-    from src.preprocessing.pipeline import preprocess_single_input
+    from src.features.engineer import engineer_features
     from src.risk.scoring import compute_risk_score, get_risk_category
 
-    progress_bar = st.progress(0, text="Preparing data...")
-
-    # Prepare the data
-    results = []
-    errors = 0
-    total = len(df_uploaded)
-
-    for i, (idx, row) in enumerate(df_uploaded.iterrows()):
+    with st.spinner("Processing batch data and calculating risk probabilities..."):
         try:
-            # Build input dict from mapping
-            input_data = {}
+            # Map input features
+            df_mapped = pd.DataFrame()
+            type_encoding = config.get("preprocessing", {}).get("type_encoding", {"L": 0, "M": 1, "H": 2})
+
             for internal_name, upload_col in mapping_final.items():
-                val = row[upload_col]
                 if internal_name == "type":
-                    # Handle type encoding
-                    type_encoding = config["preprocessing"]["type_encoding"]
-                    if isinstance(val, str) and val in type_encoding:
-                        input_data[internal_name] = type_encoding[val]
-                    elif isinstance(val, (int, float)):
-                        input_data[internal_name] = int(val)
-                    else:
-                        input_data[internal_name] = 1  # Default: Medium
+                    df_mapped[internal_name] = df_uploaded[upload_col].apply(
+                        lambda v: type_encoding[v] if (isinstance(v, str) and v in type_encoding)
+                        else (int(v) if isinstance(v, (int, float, np.number)) else 1)
+                    )
                 else:
-                    input_data[internal_name] = float(val)
+                    df_mapped[internal_name] = pd.to_numeric(df_uploaded[upload_col], errors="coerce").fillna(0.0)
 
-            # Set default type if not mapped
-            if "type" not in input_data:
-                input_data["type"] = 1  # Default: Medium
+            if "type" not in df_mapped.columns:
+                df_mapped["type"] = 1  # Default: Medium
 
-            # Preprocess
-            X_input = preprocess_single_input(
-                input_data, config, scaler, feature_stats,
-                feature_names, numerical_cols
-            )
+            # Vectorized feature engineering
+            X_engineered, _ = engineer_features(df_mapped, config, fit_stats=feature_stats)
 
-            # Predict
-            failure_prob = float(model.predict_proba(X_input)[:, 1][0])
-            risk_score = compute_risk_score(failure_prob, config)
-            risk_cat = get_risk_category(risk_score, config)
+            # Reorder & pad missing columns
+            for col in feature_names:
+                if col not in X_engineered.columns:
+                    X_engineered[col] = 0.0
+            X_engineered = X_engineered[feature_names]
 
-            results.append({
-                "row_index": idx,
-                "failure_probability": round(failure_prob * 100, 2),
-                "risk_score": round(risk_score, 1),
-                "risk_category": risk_cat["label"],
-                "prediction": "FAILURE" if failure_prob >= 0.5 else "NO FAILURE",
-                **{f"input_{k}": v for k, v in input_data.items()},
+            # Scale numerical features
+            X_scaled = X_engineered.copy()
+            cols_to_scale = [c for c in numerical_cols if c in X_scaled.columns]
+            X_scaled[cols_to_scale] = scaler.transform(X_scaled[cols_to_scale])
+
+            # Batch model probability inference
+            probs = model.predict_proba(X_scaled)[:, 1]
+
+            risk_scores = [compute_risk_score(float(p), config) for p in probs]
+            risk_cats = [get_risk_category(s, config)["label"] for s in risk_scores]
+            preds = ["FAILURE" if p >= 0.5 else "NO FAILURE" for p in probs]
+
+            results_df = pd.DataFrame({
+                "row_index": df_uploaded.index,
+                "failure_probability": np.round(probs * 100, 2),
+                "risk_score": np.round(risk_scores, 1),
+                "risk_category": risk_cats,
+                "prediction": preds,
             })
+
+            # Store in session state for persistence
+            st.session_state["batch_results"] = results_df
+            st.success("✅ Batch predictions executed successfully!")
 
         except Exception as e:
-            errors += 1
-            results.append({
-                "row_index": idx,
-                "failure_probability": None,
-                "risk_score": None,
-                "risk_category": "ERROR",
-                "prediction": f"Error: {str(e)[:50]}",
-            })
+            st.error(f"❌ Error during batch prediction: {e}")
 
-        # Update progress
-        progress = (i + 1) / total
-        progress_bar.progress(
-            progress,
-            text=f"Processing row {i + 1}/{total}... ({errors} errors)"
-        )
 
-    progress_bar.progress(1.0, text="✅ Batch prediction complete!")
-
-    # Convert to DataFrame
-    results_df = pd.DataFrame(results)
-    st.session_state["batch_results"] = results_df
-
-    # ========================================================================
-    # RESULTS DASHBOARD
-    # ========================================================================
+def _render_batch_results_dashboard(df_uploaded, results_df, config, best_name):
+    """Render the interactive results dashboard and download triggers."""
 
     st.markdown("---")
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 📊 Prediction Results Dashboard")
+    st.markdown("### 📊 Batch Prediction Results Dashboard")
 
-    # Filter valid predictions
     valid = results_df[results_df["failure_probability"].notna()]
-
     if valid.empty:
-        st.error("No valid predictions were generated. Check your data.")
+        st.error("No valid prediction results found.")
         st.markdown('</div>', unsafe_allow_html=True)
         return
 
-    # KPI cards
     n_total = len(valid)
     n_failures = int((valid["prediction"] == "FAILURE").sum())
     avg_risk = float(valid["risk_score"].mean())
     n_critical = int((valid["risk_category"].isin(["HIGH RISK", "CRITICAL RISK"])).sum())
 
-    # Get business cost parameters from config
+    # Financial Cost Parameters
     biz_config = config.get("business", {})
     downtime_cost_per_hour = biz_config.get("downtime_cost_per_hour", 10000.0)
     avg_downtime_hours = biz_config.get("avg_downtime_hours", 4.0)
     preventive_action_cost = biz_config.get("preventive_action_cost", 1500.0)
-    false_alarm_cost = biz_config.get("false_alarm_cost", 1500.0)
-    
-    # Financial expectations
+
     failure_cost_unit = downtime_cost_per_hour * avg_downtime_hours
     probs = valid["failure_probability"] / 100.0
     preds = valid["prediction"]
-    
+
     unmitigated_cost = (probs * failure_cost_unit).sum()
-    
-    mitigated_row_costs = []
-    for p, pred in zip(probs, preds):
-        if pred == "FAILURE":
-            mitigated_row_costs.append(preventive_action_cost)
-        else:
-            mitigated_row_costs.append(p * failure_cost_unit)
-            
+
+    mitigated_row_costs = [
+        preventive_action_cost if pred == "FAILURE" else (p * failure_cost_unit)
+        for p, pred in zip(probs, preds)
+    ]
     mitigated_cost = sum(mitigated_row_costs)
     batch_savings = unmitigated_cost - mitigated_cost
     batch_roi = (batch_savings / mitigated_cost * 100) if mitigated_cost > 0 else 0
@@ -549,8 +438,8 @@ def _run_batch_predictions(
     k1, k2, k3, k4 = st.columns(4)
     with k1:
         st.markdown(render_kpi_card(
-            "Records Processed", f"{n_total:,}",
-            f"{errors} errors" if errors > 0 else "All successful", "blue"
+            "Processed Fleet Assets", f"{n_total:,}",
+            "Batch predictions complete", "blue"
         ), unsafe_allow_html=True)
     with k2:
         st.markdown(render_kpi_card(
@@ -559,48 +448,47 @@ def _run_batch_predictions(
         ), unsafe_allow_html=True)
     with k3:
         st.markdown(render_kpi_card(
-            "Average Risk Score", f"{avg_risk:.1f}",
-            "Across all predictions", "cyan"
+            "Average Fleet Risk", f"{avg_risk:.1f}",
+            "Score range (0-100)", "cyan"
         ), unsafe_allow_html=True)
     with k4:
         st.markdown(render_kpi_card(
             "High-Risk Alerts", f"{n_critical}",
-            "HIGH + CRITICAL risk", "purple"
+            "Requires immediate action", "purple"
         ), unsafe_allow_html=True)
 
-    st.markdown("#### 💼 Financial Value Estimates")
+    st.markdown("#### 💼 Financial Impact Estimates")
     f1, f2, f3, f4 = st.columns(4)
     with f1:
         st.markdown(render_kpi_card(
-            "Unmitigated Risk Cost", f"${unmitigated_cost:,.2f}",
-            "Expected downtime cost without AI", "red"
+            "Unmitigated Failure Risk", f"${unmitigated_cost:,.2f}",
+            "Unplanned downtime cost without AI", "red"
         ), unsafe_allow_html=True)
     with f2:
         st.markdown(render_kpi_card(
-            "Mitigated Maintenance Cost", f"${mitigated_cost:,.2f}",
-            "AI-directed maintenance cost", "purple"
+            "Mitigated Intervention Cost", f"${mitigated_cost:,.2f}",
+            "Targeted AI maintenance cost", "purple"
         ), unsafe_allow_html=True)
     with f3:
         st.markdown(render_kpi_card(
-            "Expected Net Savings", f"${batch_savings:,.2f}",
-            "Expected operational savings", "green"
+            "Net Fleet Savings", f"${batch_savings:,.2f}",
+            "Net operational savings", "green"
         ), unsafe_allow_html=True)
     with f4:
         st.markdown(render_kpi_card(
-            "Batch ROI", f"{batch_roi:.1f}%",
-            f"Net benefit: {batch_roi/100:.1f}x", "blue"
+            "Estimated Batch ROI", f"{batch_roi:.1f}%",
+            f"Net benefit multiplier: {batch_roi/100:.1f}x", "blue"
         ), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Charts row
+    # Charts Row
     chart_left, chart_right = st.columns(2)
 
     with chart_left:
-        # Risk distribution donut
         risk_counts = valid["risk_category"].value_counts()
         cat_order = ["LOW RISK", "MODERATE RISK", "HIGH RISK", "CRITICAL RISK"]
-        cat_colors = ["#22c55e", "#eab308", "#f97316", "#ef4444"]
+        cat_colors = ["#10b981", "#f59e0b", "#f97316", "#ef4444"]
         ordered_labels = [c for c in cat_order if c in risk_counts.index]
         ordered_values = [risk_counts[c] for c in ordered_labels]
         ordered_colors = [cat_colors[cat_order.index(c)] for c in ordered_labels]
@@ -612,12 +500,11 @@ def _run_batch_predictions(
             marker_colors=ordered_colors,
             textinfo="label+value",
             textfont_size=12,
-            pull=[0.02] * len(ordered_labels),
         )])
         fig.update_layout(
-            title=dict(text="Risk Category Distribution", font=dict(size=14, color="#e2e8f0")),
-            height=340,
-            margin=dict(t=50, b=10, l=10, r=10),
+            title=dict(text="Fleet Risk Category Breakdown", font=dict(size=14, color="#f1f5f9")),
+            height=320,
+            margin=dict(t=40, b=10, l=10, r=10),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#94a3b8"),
@@ -626,114 +513,87 @@ def _run_batch_predictions(
         st.plotly_chart(fig, use_container_width=True)
 
     with chart_right:
-        # Risk score histogram
-        fig = go.Figure(go.Histogram(
+        fig_hist = go.Figure(go.Histogram(
             x=valid["risk_score"],
             nbinsx=20,
             marker_color="#3b82f6",
             marker_line=dict(color="#1e3a5f", width=1),
             opacity=0.85,
         ))
-        fig.add_vline(x=60, line_dash="dash", line_color="#ef4444",
-                      annotation_text="Warning", annotation_font_color="#ef4444")
-        fig.update_layout(
-            title=dict(text="Risk Score Distribution", font=dict(size=14, color="#e2e8f0")),
-            height=340,
-            margin=dict(t=50, b=40, l=40, r=20),
+        fig_hist.add_vline(x=60, line_dash="dash", line_color="#ef4444",
+                           annotation_text="Critical Threshold", annotation_font_color="#ef4444")
+        fig_hist.update_layout(
+            title=dict(text="Fleet Risk Score Distribution", font=dict(size=14, color="#f1f5f9")),
+            height=320,
+            margin=dict(t=40, b=40, l=40, r=20),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#94a3b8"),
             xaxis_title="Risk Score (0-100)",
-            yaxis_title="Count",
+            yaxis_title="Equipment Count",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig_hist, use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ========================================================================
-    # RESULTS TABLE
-    # ========================================================================
-
+    # Table & Export
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 📋 Detailed Predictions")
+    st.markdown("### 📋 Fleet Risk Predictions Log")
 
-    # Prepare display columns
-    display_cols = ["row_index", "prediction", "failure_probability",
-                    "risk_score", "risk_category"]
-    # Add input columns if available
-    input_cols = [c for c in results_df.columns if c.startswith("input_")]
-    display_cols.extend(input_cols)
-
+    display_cols = ["row_index", "prediction", "failure_probability", "risk_score", "risk_category"]
     display_df = results_df[display_cols].copy()
-    rename_map = {
-        "row_index": "Row #",
-        "prediction": "Prediction",
+    display_df = display_df.rename(columns={
+        "row_index": "Asset #",
+        "prediction": "AI Prediction",
         "failure_probability": "Failure Prob (%)",
         "risk_score": "Risk Score",
         "risk_category": "Risk Level",
-    }
-    for c in input_cols:
-        clean_name = c.replace("input_", "").replace("_", " ").title()
-        rename_map[c] = clean_name
-
-    display_df = display_df.rename(columns=rename_map)
+    })
 
     st.dataframe(
         display_df,
         use_container_width=True,
         hide_index=True,
-        height=400,
+        height=380,
     )
-
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ========================================================================
-    # EXPORT
-    # ========================================================================
-
+    # CSV Export
     st.markdown("---")
-
-    # Merge results with original data
     export_df = pd.concat([
         df_uploaded.reset_index(drop=True),
         results_df[["prediction", "failure_probability", "risk_score", "risk_category"]].reset_index(drop=True),
     ], axis=1)
 
     csv_data = export_df.to_csv(index=False)
+    col_exp1, col_exp2 = st.columns(2)
 
-    col_export_1, col_export_2 = st.columns(2)
-
-    with col_export_1:
+    with col_exp1:
         st.download_button(
-            "📥 Download Full Results (CSV)",
+            "📥 Download Full Fleet Prediction Results (CSV)",
             csv_data,
-            f"predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            f"fleet_predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             "text/csv",
             use_container_width=True,
         )
 
-    with col_export_2:
-        # High risk only
-        high_risk_df = export_df[
-            export_df["risk_category"].isin(["HIGH RISK", "CRITICAL RISK"])
-        ]
+    with col_exp2:
+        high_risk_df = export_df[export_df["risk_category"].isin(["HIGH RISK", "CRITICAL RISK"])]
         if not high_risk_df.empty:
             hr_csv = high_risk_df.to_csv(index=False)
             st.download_button(
-                f"⚠️ Download High-Risk Only ({len(high_risk_df)} records)",
+                f"⚠️ Download High-Risk Critical Assets ({len(high_risk_df)} records)",
                 hr_csv,
-                f"high_risk_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                f"critical_assets_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 "text/csv",
                 use_container_width=True,
             )
         else:
-            st.success("✅ No high-risk records found in your dataset!")
+            st.success("✅ No high-risk records found in the analyzed dataset!")
 
-    # Footer
     st.markdown(f"""
     <div class="disclaimer">
-        📊 Batch prediction completed using <strong>{best_name}</strong> model.
-        Results are AI-powered estimates — always verify with qualified maintenance
-        engineers before scheduling critical equipment interventions.
+        📊 Batch predictions completed using <strong>{best_name}</strong> model.
+        Predictions are AI-generated telemetry evaluations — verify with qualified equipment engineers before scheduling maintenance interventions.
     </div>
     """, unsafe_allow_html=True)
