@@ -1,6 +1,6 @@
 """
-Page 7 — Upload & Predict
-===========================
+Upload & Predict Module
+=======================
 Upload custom CSV/Excel datasets for batch prediction using the trained model.
 
 Features:
@@ -434,6 +434,32 @@ def _run_batch_predictions(
     avg_risk = float(valid["risk_score"].mean())
     n_critical = int((valid["risk_category"].isin(["HIGH RISK", "CRITICAL RISK"])).sum())
 
+    # Get business cost parameters from config
+    biz_config = config.get("business", {})
+    downtime_cost_per_hour = biz_config.get("downtime_cost_per_hour", 10000.0)
+    avg_downtime_hours = biz_config.get("avg_downtime_hours", 4.0)
+    preventive_action_cost = biz_config.get("preventive_action_cost", 1500.0)
+    false_alarm_cost = biz_config.get("false_alarm_cost", 1500.0)
+    
+    # Financial expectations
+    failure_cost_unit = downtime_cost_per_hour * avg_downtime_hours
+    probs = valid["failure_probability"] / 100.0
+    preds = valid["prediction"]
+    
+    unmitigated_cost = (probs * failure_cost_unit).sum()
+    
+    mitigated_row_costs = []
+    for p, pred in zip(probs, preds):
+        if pred == "FAILURE":
+            mitigated_row_costs.append(preventive_action_cost)
+        else:
+            mitigated_row_costs.append(p * failure_cost_unit)
+            
+    mitigated_cost = sum(mitigated_row_costs)
+    batch_savings = unmitigated_cost - mitigated_cost
+    batch_roi = (batch_savings / mitigated_cost * 100) if mitigated_cost > 0 else 0
+
+    st.markdown("#### 📊 Operational Metrics")
     k1, k2, k3, k4 = st.columns(4)
     with k1:
         st.markdown(render_kpi_card(
@@ -454,6 +480,29 @@ def _run_batch_predictions(
         st.markdown(render_kpi_card(
             "High-Risk Alerts", f"{n_critical}",
             "HIGH + CRITICAL risk", "purple"
+        ), unsafe_allow_html=True)
+
+    st.markdown("#### 💼 Financial Value Estimates")
+    f1, f2, f3, f4 = st.columns(4)
+    with f1:
+        st.markdown(render_kpi_card(
+            "Unmitigated Risk Cost", f"${unmitigated_cost:,.2f}",
+            "Expected downtime cost without AI", "red"
+        ), unsafe_allow_html=True)
+    with f2:
+        st.markdown(render_kpi_card(
+            "Mitigated Maintenance Cost", f"${mitigated_cost:,.2f}",
+            "AI-directed maintenance cost", "purple"
+        ), unsafe_allow_html=True)
+    with f3:
+        st.markdown(render_kpi_card(
+            "Expected Net Savings", f"${batch_savings:,.2f}",
+            "Expected operational savings", "green"
+        ), unsafe_allow_html=True)
+    with f4:
+        st.markdown(render_kpi_card(
+            "Batch ROI", f"{batch_roi:.1f}%",
+            f"Net benefit: {batch_roi/100:.1f}x", "blue"
         ), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -598,7 +647,7 @@ def _run_batch_predictions(
     st.markdown(f"""
     <div class="disclaimer">
         📊 Batch prediction completed using <strong>{best_name}</strong> model.
-        Results are AI-generated estimates — always verify with domain experts
-        before taking maintenance action.
+        Results are AI-powered estimates — always verify with qualified maintenance
+        engineers before scheduling critical equipment interventions.
     </div>
     """, unsafe_allow_html=True)

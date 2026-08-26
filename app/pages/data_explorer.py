@@ -1,6 +1,6 @@
 """
-Page 5 — Data Explorer
-========================
+Data Explorer Module
+====================
 Interactive dataset exploration with filtering and visualization.
 """
 
@@ -18,7 +18,7 @@ def render_page(project_root, load_dataset_fn):
 
     st.markdown(render_header_banner(
         "Data Explorer",
-        "Interactive exploration of the AI4I 2020 Predictive Maintenance Dataset"
+        "Interactive exploration of the manufacturing sensor dataset"
     ), unsafe_allow_html=True)
 
     # Dataset source selection

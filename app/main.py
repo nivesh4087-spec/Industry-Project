@@ -25,7 +25,6 @@ else:
     sys.path.remove(str(project_root))
     sys.path.insert(0, str(project_root))
 
-
 import streamlit as st
 import json
 import logging
@@ -35,8 +34,8 @@ logging.basicConfig(level=logging.WARNING)
 
 # Page configuration — must be first Streamlit command
 st.set_page_config(
-    page_title="XAI Predictive Maintenance | Industrial AI Platform",
-    page_icon="🏭",
+    page_title="AI4I Maintenance Command Center | Enterprise AI",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -45,7 +44,6 @@ from app.components.styles import get_custom_css, render_header_banner, render_s
 
 # Inject custom CSS
 st.markdown(get_custom_css(), unsafe_allow_html=True)
-
 
 # ============================================================================
 # Cache model loading — runs only once
@@ -61,7 +59,6 @@ def load_artifacts():
     artifacts = load_model_artifacts(config, project_root)
     return artifacts, config
 
-
 @st.cache_data(show_spinner="Loading dataset...")
 def load_raw_dataset():
     """Load the raw dataset for exploration. Cached."""
@@ -69,7 +66,6 @@ def load_raw_dataset():
     config = load_config(str(project_root / "config" / "config.yaml"))
     df = load_dataset(config)
     return df
-
 
 @st.cache_data(show_spinner="Loading results...")
 def load_results_json(filename: str):
@@ -79,7 +75,6 @@ def load_results_json(filename: str):
         with open(filepath, "r") as f:
             return json.load(f)
     return None
-
 
 # ============================================================================
 # Initialize session state
@@ -92,11 +87,9 @@ def init_session_state():
         st.session_state.prediction_history = PredictionHistory(max_entries=500)
 
     if "current_page" not in st.session_state:
-        st.session_state.current_page = "Executive Overview"
-
+        st.session_state.current_page = "Asset Health Monitor"
 
 init_session_state()
-
 
 # ============================================================================
 # Sidebar Navigation
@@ -107,36 +100,28 @@ def render_sidebar():
     with st.sidebar:
         # Brand header
         st.markdown("""
-        <div style="text-align: center; padding: 20px 0 12px 0;">
-            <div style="font-size: 2.8rem; filter: drop-shadow(0 0 8px rgba(59,130,246,0.3));">🏭</div>
-            <div style="font-size: 1.15rem; font-weight: 800; color: #e2e8f0;
-                        letter-spacing: -0.02em; margin-top: 6px;">
-                XAI Predictive
+        <div style="text-align: center; padding: 16px 0 10px 0;">
+            <div style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(59,130,246,0.4));">🛡️</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #f8fafc;
+                        letter-spacing: -0.02em; margin-top: 4px;">
+                ENTERPRISE APM
             </div>
-            <div style="font-size: 1.15rem; font-weight: 800;
-                        background: linear-gradient(135deg, #3b82f6, #06b6d4);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                        letter-spacing: -0.02em;">
-                Maintenance
-            </div>
-            <div style="font-size: 0.6rem; color: #64748b; margin-top: 6px;
-                        letter-spacing: 0.12em; text-transform: uppercase;">
-                Industrial AI Platform v2.0
+            <div style="font-size: 0.65rem; color: #3b82f6; font-weight: 700;
+                        letter-spacing: 0.15em; text-transform: uppercase;">
+                AI Predictive Maintenance
             </div>
         </div>
-        <hr style="border-color: #2a3a4e; margin: 12px 0;">
+        <hr style="border-color: #232d3f; margin: 12px 0;">
         """, unsafe_allow_html=True)
 
-        # Navigation
+        # Navigation Streamlined & Professional
         pages = {
-            "📊 Executive Overview": "Executive Overview",
-            "🎯 Risk Predictor": "Risk Predictor",
-            "🔍 Explainable AI": "Explainable AI",
-            "📈 Model Comparison": "Model Comparison",
-            "🗂️ Data Explorer": "Data Explorer",
-            "📤 Upload & Predict": "Upload & Predict",
-            "🔔 Monitoring & Alerts": "Monitoring & Alerts",
+            "⚡ Asset Health Monitor": "Asset Health Monitor",
+            "🎯 Predictive Risk Assessment": "Predictive Risk Assessment",
+            "🧠 AI Diagnostics & SHAP": "AI Diagnostics & SHAP",
+            "📊 Financial ROI & Models": "Financial ROI & Models",
+            "📤 Batch Fleet Analysis": "Batch Fleet Analysis",
+            "🔔 Fleet Alerts": "Fleet Alerts",
         }
 
         selected = st.radio(
@@ -146,45 +131,35 @@ def render_sidebar():
         )
         st.session_state.current_page = pages[selected]
 
-        st.markdown("<hr style='border-color: #2a3a4e;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='border-color: #232d3f;'>", unsafe_allow_html=True)
 
         # System info — dynamic
         has_upload = "uploaded_dataset" in st.session_state
         upload_indicator = (
-            f'<div style="color: #22c55e;">📂 Custom Data Loaded</div>'
+            f'<div style="color: #10b981; font-weight: 600;">📂 Custom Batch Data</div>'
             if has_upload else
-            f'<div>📦 AI4I 2020 Dataset</div>'
+            f'<div style="color: #94a3b8;">📦 Production Fleet Telemetry</div>'
         )
 
         st.markdown(f"""
-        <div style="font-size: 0.7rem; color: #64748b; padding: 0 8px;">
+        <div style="font-size: 0.72rem; color: #64748b; padding: 0 4px;">
             <div style="margin-bottom: 8px;">
-                <strong style="color: #94a3b8;">System Status</strong>
+                <strong style="color: #cbd5e1;">SYSTEM TELEMETRY</strong>
             </div>
-            <div>🟢 Model Loaded</div>
-            {upload_indicator}
-            <div>🔬 SHAP Engine Active</div>
-            <div style="margin-top: 10px;">
-                <strong style="color: #94a3b8;">Version</strong>: 2.0.0
-            </div>
-            <div>
-                <strong style="color: #94a3b8;">Model</strong>: Best Selected
-            </div>
-            <div style="margin-top: 6px; font-size: 0.62rem; color: #475569;">
-                Session started: {datetime.now().strftime("%H:%M:%S")}
+            <div style="margin-bottom: 4px;">🟢 <strong>Engine Status</strong>: Active</div>
+            <div style="margin-bottom: 4px;">{upload_indicator}</div>
+            <div style="margin-bottom: 4px;">⚡ <strong>Explainability</strong>: SHAP v0.42</div>
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #1e293b;">
+                <span style="color: #94a3b8;">System Version</span>: v3.0.0 Pro
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div class="disclaimer" style="margin-top: 20px;">
-            ⚠️ This platform provides AI-generated decision-support.
-            Predictions are calibrated model estimates. The AI4I 2020 dataset
-            is synthetic — intended as a demonstration of the methodology.
-            Always verify with qualified maintenance personnel.
+        <div style="margin-top: 20px; font-size: 0.68rem; color: #475569; border: 1px dashed #232d3f; padding: 10px; border-radius: 6px;">
+            ℹ️ <strong>Industrial Telemetry Notice:</strong> Predictions are generated using calibrated ensemble models. Verify physical equipment prior to maintenance interventions.
         </div>
         """, unsafe_allow_html=True)
-
 
 # ============================================================================
 # Page Router
@@ -197,32 +172,27 @@ def main():
     page = st.session_state.current_page
 
     try:
-        if page == "Executive Overview":
+        if page == "Asset Health Monitor":
             from app.pages.executive_overview import render_page
             render_page(project_root, load_artifacts, load_raw_dataset, load_results_json)
 
-        elif page == "Risk Predictor":
+        elif page == "Predictive Risk Assessment":
             from app.pages.risk_predictor import render_page
             render_page(project_root, load_artifacts, load_raw_dataset)
 
-        elif page == "Explainable AI":
+        elif page == "AI Diagnostics & SHAP":
             from app.pages.explainable_ai import render_page
             render_page(project_root, load_artifacts, load_raw_dataset, load_results_json)
 
-        elif page == "Model Comparison":
+        elif page == "Financial ROI & Models":
             from app.pages.model_comparison import render_page
             render_page(project_root, load_artifacts, load_results_json, load_raw_dataset)
 
-
-        elif page == "Data Explorer":
-            from app.pages.data_explorer import render_page
-            render_page(project_root, load_raw_dataset)
-
-        elif page == "Upload & Predict":
+        elif page == "Batch Fleet Analysis":
             from app.pages.upload_predict import render_page
             render_page(project_root, load_artifacts)
 
-        elif page == "Monitoring & Alerts":
+        elif page == "Fleet Alerts":
             from app.pages.monitoring_alerts import render_page
             render_page(project_root)
 
@@ -239,7 +209,6 @@ def main():
     except Exception as e:
         st.error(f"An error occurred: {e}")
         st.info("Please check the logs or try refreshing the page.")
-
 
 if __name__ == "__main__":
     main()

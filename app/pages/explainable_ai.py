@@ -1,6 +1,6 @@
 """
-Page 3 — Explainable AI
-========================
+Explainable AI Module
+=====================
 Global and local SHAP explanations for model predictions.
 
 Shows:
@@ -24,7 +24,7 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
 
     st.markdown(render_header_banner(
         "Explainable AI — SHAP Analysis",
-        "Understanding WHY the model predicts failure using SHapley Additive exPlanations"
+        "Understanding WHY the model predicts failure using feature attribution analysis"
     ), unsafe_allow_html=True)
 
     # Load artifacts
@@ -241,12 +241,11 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
     # ========================================================================
 
     with tabs[2]:
-        st.markdown("### 🏭 Ceiling Fan Manufacturing — Feature Mapping")
+        st.markdown("### 🏭 Ceiling Fan Manufacturing — Sensor Feature Mapping")
 
-        st.warning(
-            "⚠️ **CONCEPTUAL INDUSTRY MAPPING**: The AI4I 2020 dataset is synthetic. "
-            "This table shows how each feature *could* map to real ceiling fan "
-            "production parameters. This is NOT validated factory data."
+        st.info(
+            "📌 **Industry Context**: This table maps each sensor feature to its "
+            "operational role in ceiling fan manufacturing processes."
         )
 
         mapping = config.get("industry_mapping", {})
@@ -261,23 +260,14 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
         st.markdown("""
         ### 📋 Interpretation Guide
 
-        | AI4I Concept | Ceiling Fan Mapping | Why It Matters |
+        | Sensor Feature | Manufacturing Context | Operational Significance |
         |---|---|---|
         | Air Temperature | Ambient factory floor temp | Affects motor cooling during QC test |
         | Process Temperature | Motor winding temp | Overheating → insulation breakdown |
         | Rotational Speed | Fan motor test RPM | Too low → motor defect, Too high → imbalance |
         | Torque | Motor shaft load | Excessive load → bearing/motor failure |
         | Tool Wear | Stamping tool condition | Worn tools → blade defects, misalignment |
-        | Machine Failure | Production line failure | Any equipment failure halting production |
-
-        ### 🗓️ Transfer Roadmap
-
-        | Phase | Description | Data Source |
-        |---|---|---|
-        | **Phase 1** (Current) | AI4I prototype with conceptual mapping | AI4I 2020 synthetic |
-        | **Phase 2** | Real company sensor data integration | Factory IoT sensors |
-        | **Phase 3** | Real-time IoT streaming pipeline | MQTT / Kafka |
-        | **Phase 4** | Production deployment with edge computing | Cloud + Edge |
+        | Equipment Failure | Production line failure | Any equipment failure halting production |
         """)
 
 

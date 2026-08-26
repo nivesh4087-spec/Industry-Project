@@ -53,12 +53,56 @@ def render_page(project_root, load_artifacts_fn, load_results_fn, load_dataset_f
         st.error(f"Failed to prepare evaluation dataset: {e}")
         return
 
+    # Sidebar inputs for cost parameters (shares keys with Executive Overview for state persistence!)
+    biz_config = config.get("business", {})
+    default_downtime_cost = biz_config.get("downtime_cost_per_hour", 10000.0)
+    default_downtime_hours = biz_config.get("avg_downtime_hours", 4.0)
+    default_preventive_cost = biz_config.get("preventive_action_cost", 1500.0)
+    default_false_alarm_cost = biz_config.get("false_alarm_cost", 1500.0)
+    default_license_cost = biz_config.get("license_cost_monthly", 2500.0)
+
+    with st.sidebar:
+        st.markdown("<hr style='border-color: #2a3a4e;'>", unsafe_allow_html=True)
+        st.markdown('<div style="font-size: 0.85rem; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">💼 Cost-Benefit Evaluator</div>', unsafe_allow_html=True)
+        
+        sim_downtime_cost = st.number_input(
+            "Hourly Downtime Cost ($/hr)",
+            min_value=0.0, value=default_downtime_cost, step=500.0,
+            key="sim_downtime_cost",
+            help="Cost incurred per hour of unscheduled machinery breakdown."
+        )
+        sim_downtime_hours = st.number_input(
+            "Average Recovery Time (Hrs)",
+            min_value=0.1, value=default_downtime_hours, step=0.5,
+            key="sim_downtime_hours",
+            help="Average time to repair/replace tool and resume production."
+        )
+        sim_preventive_cost = st.number_input(
+            "Preventive Action Cost ($)",
+            min_value=0.0, value=default_preventive_cost, step=100.0,
+            key="sim_preventive_cost",
+            help="Cost of planned tool replacement / inspection."
+        )
+        sim_false_alarm_cost = st.number_input(
+            "False Alarm Cost ($)",
+            min_value=0.0, value=default_false_alarm_cost, step=100.0,
+            key="sim_false_alarm_cost",
+            help="Cost incurred when model falsely predicts a failure."
+        )
+        sim_license_cost = st.number_input(
+            "Monthly AI Operating Cost ($)",
+            min_value=0.0, value=default_license_cost, step=500.0,
+            key="sim_license_cost",
+            help="Monthly subscription or infrastructure cost for the ML model."
+        )
+
     tabs = st.tabs([
         "📊 Comparison Table",
         "📈 ROC & PR Curves",
         "🔲 Confusion Matrices",
         "📐 Calibration",
-        "🔬 Ablation Study"
+        "🔧 Feature Engineering Impact",
+        "💼 Business Cost Evaluation"
     ])
 
     # ========================================================================
@@ -394,7 +438,7 @@ def render_page(project_root, load_artifacts_fn, load_results_fn, load_dataset_f
     # ========================================================================
 
     with tabs[4]:
-        st.markdown("### Ablation Study — Feature Impact Analysis")
+        st.markdown("### Feature Engineering Impact Analysis")
 
         ablation = load_results_fn("ablation_results.json")
 
@@ -428,10 +472,126 @@ def render_page(project_root, load_artifacts_fn, load_results_fn, load_dataset_f
             st.info("Ablation results not found. Run the training pipeline to generate.")
 
         st.markdown("""
-        ### Strategic System Design Choices
+        ### Engineering Design Decisions
 
         | Design Aspect | Rationale | Impact |
         |---|---|---|
-        | **Class Imbalance** | Handled using `class_weight='balanced'` | Prevents the model from bias towards the majority class (No Failure) |
+        | **Class Imbalance** | Handled using `class_weight='balanced'` | Prevents model bias towards majority class (No Failure) |
         | **Probability Calibration** | Calibrated using Isotonic Regression | Corrects probability scaling for precise risk estimates |
         """)
+
+    # ========================================================================
+    # TAB 6 — Business Cost Evaluation
+    # ========================================================================
+
+    with tabs[5]:
+        st.markdown("### 💼 Financial ROI Comparison Across ML Models")
+        st.markdown(
+            "This view translates standard machine learning metrics into financial metrics, "
+            "showing the estimated costs and savings associated with deploying each candidate model."
+        )
+
+        if test_results:
+            cost_results = []
+            failure_cost_unit = sim_downtime_cost * sim_downtime_hours
+
+            for r in test_results:
+                cm = r.get("confusion_matrix")
+                if not cm:
+                    continue
+                tn, fp, fn, tp = cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+
+                failures = tp + fn
+                run_to_failure = failures * failure_cost_unit
+                
+                predictive_cost = (tp * sim_preventive_cost) + (fp * sim_false_alarm_cost) + (fn * failure_cost_unit) + sim_license_cost
+                savings = run_to_failure - predictive_cost
+                model_roi = (savings / predictive_cost * 100) if predictive_cost > 0 else 0
+
+                cost_results.append({
+                    "Model": r["model"],
+                    "Precision": r["precision"],
+                    "Recall": r["recall"],
+                    "F1-Score": r["f1"],
+                    "Unscheduled Failures Missed (FN)": fn,
+                    "False Alarms (FP)": fp,
+                    "Total Operations Cost": predictive_cost,
+                    "Net Savings ($)": savings,
+                    "ROI (%)": model_roi
+                })
+
+            cost_df = pd.DataFrame(cost_results)
+
+            st.dataframe(
+                cost_df.style.highlight_max(
+                    subset=["Net Savings ($)", "ROI (%)"],
+                    color="#1a3a2a",
+                ).highlight_min(
+                    subset=["Total Operations Cost", "Unscheduled Failures Missed (FN)", "False Alarms (FP)"],
+                    color="#1a3a2a",
+                ).format({
+                    "Precision": "{:.4f}",
+                    "Recall": "{:.4f}",
+                    "F1-Score": "{:.4f}",
+                    "Total Operations Cost": "${:,.2f}",
+                    "Net Savings ($)": "${:,.2f}",
+                    "ROI (%)": "{:.1f}%",
+                }),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            fig_compare = go.Figure()
+            
+            # Get test failures count
+            failures_test = next(
+                (r.get("confusion_matrix", [[0,0],[0,0]])[1][0] + r.get("confusion_matrix", [[0,0],[0,0]])[1][1] 
+                 for r in test_results if r.get("confusion_matrix")), 
+                51
+            )
+            run_to_failure_baseline = failures_test * failure_cost_unit
+
+            fig_compare.add_trace(go.Bar(
+                name="Run to Failure (Baseline)",
+                x=cost_df["Model"],
+                y=[run_to_failure_baseline] * len(cost_df),
+                marker_color="#ef4444",
+                opacity=0.6,
+            ))
+
+            fig_compare.add_trace(go.Bar(
+                name="Total AI Maintenance Cost",
+                x=cost_df["Model"],
+                y=cost_df["Total Operations Cost"],
+                marker_color="#3b82f6",
+            ))
+
+            fig_compare.add_trace(go.Bar(
+                name="Net Financial Savings",
+                x=cost_df["Model"],
+                y=cost_df["Net Savings ($)"],
+                marker_color="#22c55e",
+            ))
+
+            fig_compare.update_layout(
+                barmode="group",
+                title="Financial Impact Comparison Across Candidate Models",
+                title_font=dict(size=15, color="#e2e8f0"),
+                height=350,
+                margin=dict(t=40, b=10, l=10, r=10),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#94a3b8"),
+                yaxis_title="USD ($)",
+            )
+
+            st.plotly_chart(fig_compare, use_container_width=True)
+
+            st.info(
+                "💡 **Strategic Insight**: Notice that models optimizing for higher **F1-Score / Recall** (like XGBoost and HistGradientBoosting) "
+                "significantly reduce **Unscheduled Failures Missed (FN)**. Since unexpected downtime is extremely expensive "
+                f"(${sim_downtime_cost:,.0f}/hr), reducing FNs yields massive savings, easily outweighing the cost of a few "
+                "False Alarms (FP)."
+            )

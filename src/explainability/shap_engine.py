@@ -30,6 +30,61 @@ import shap
 
 logger = logging.getLogger(__name__)
 
+# Professional dark theme constants
+BG_DARK = "#0a0e17"
+BG_CARD = "#1a2332"
+TEXT_PRIMARY = "#e2e8f0"
+TEXT_SECONDARY = "#94a3b8"
+TEXT_MUTED = "#64748b"
+GRID_COLOR = "#2a3a4e"
+BORDER_COLOR = "#2a3a4e"
+FIG_DPI = 200
+
+# Feature name mapping for clean display labels
+FEATURE_DISPLAY_NAMES = {
+    "air_temp_k": "Air Temperature",
+    "process_temp_k": "Process Temperature",
+    "rotational_speed_rpm": "Rotational Speed",
+    "torque_nm": "Torque",
+    "tool_wear_min": "Tool Wear",
+    "type": "Product Type",
+    "temp_diff": "Temperature Differential",
+    "power": "Mechanical Power",
+    "torque_per_rpm": "Load Efficiency",
+    "strain": "Mechanical Strain",
+    "power_factor": "Power Factor",
+    "temp_rpm_interaction": "Thermal-Speed Stress",
+    "tool_wear_severity": "Wear Severity",
+    "is_high_torque": "High Torque Flag",
+    "is_low_speed": "Low Speed Flag",
+    "overload_indicator": "Overload Indicator",
+}
+
+
+def _apply_dark_theme():
+    """Apply professional dark industrial theme to matplotlib."""
+    plt.rcParams.update({
+        'figure.facecolor': BG_DARK,
+        'axes.facecolor': BG_CARD,
+        'axes.edgecolor': BORDER_COLOR,
+        'axes.labelcolor': TEXT_SECONDARY,
+        'axes.titlecolor': TEXT_PRIMARY,
+        'xtick.color': TEXT_MUTED,
+        'ytick.color': TEXT_MUTED,
+        'text.color': TEXT_PRIMARY,
+        'font.family': 'sans-serif',
+        'font.sans-serif': ['Inter', 'Segoe UI', 'Helvetica', 'Arial', 'sans-serif'],
+        'savefig.facecolor': BG_DARK,
+        'savefig.edgecolor': BG_DARK,
+    })
+
+
+def _clean_columns(X: pd.DataFrame) -> pd.DataFrame:
+    """Rename DataFrame columns to clean display names."""
+    rename_map = {col: FEATURE_DISPLAY_NAMES.get(col, col.replace('_', ' ').title())
+                  for col in X.columns}
+    return X.rename(columns=rename_map)
+
 
 class SHAPEngine:
     """SHAP-based explainability engine for predictive maintenance models.
@@ -324,6 +379,7 @@ class SHAPEngine:
         Returns:
             Matplotlib Figure.
         """
+        _apply_dark_theme()
         if shap_values is None:
             shap_values = self._shap_values_cache
         if X is None:
@@ -331,20 +387,24 @@ class SHAPEngine:
         if max_display is None:
             max_display = self.config["shap"]["max_display_features"]
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+        # Use clean feature names
+        X_display = _clean_columns(X.copy()) if X is not None else X
+
+        fig, ax = plt.subplots(figsize=(12, 9))
         shap.summary_plot(
-            shap_values, X,
+            shap_values, X_display,
             max_display=max_display,
             show=False,
         )
-        plt.title("SHAP Summary Plot — Feature Impact on Failure Prediction",
-                   fontsize=13, fontweight="bold", pad=15)
+        plt.title("Feature Impact on Failure Prediction — SHAP Analysis",
+                   fontsize=15, fontweight="bold", color=TEXT_PRIMARY, pad=15)
         plt.tight_layout()
 
         if save_dir:
             save_dir = Path(save_dir)
             save_dir.mkdir(parents=True, exist_ok=True)
-            plt.savefig(save_dir / "shap_summary.png", dpi=150, bbox_inches="tight")
+            plt.savefig(save_dir / "shap_summary.png", dpi=FIG_DPI,
+                        bbox_inches="tight", facecolor=BG_DARK)
             logger.info("Saved SHAP summary plot.")
 
         fig = plt.gcf()
@@ -368,6 +428,7 @@ class SHAPEngine:
         Returns:
             Matplotlib Figure.
         """
+        _apply_dark_theme()
         if shap_values is None:
             shap_values = self._shap_values_cache
         if X is None:
@@ -375,21 +436,25 @@ class SHAPEngine:
         if max_display is None:
             max_display = self.config["shap"]["max_display_features"]
 
-        fig, ax = plt.subplots(figsize=(10, 6))
+        # Use clean feature names
+        X_display = _clean_columns(X.copy()) if X is not None else X
+
+        fig, ax = plt.subplots(figsize=(12, 7))
         shap.summary_plot(
-            shap_values, X,
+            shap_values, X_display,
             plot_type="bar",
             max_display=max_display,
             show=False,
         )
-        plt.title("SHAP Feature Importance — Mean |SHAP Value|",
-                   fontsize=13, fontweight="bold", pad=15)
+        plt.title("Feature Importance — Mean Absolute SHAP Value",
+                   fontsize=15, fontweight="bold", color=TEXT_PRIMARY, pad=15)
         plt.tight_layout()
 
         if save_dir:
             save_dir = Path(save_dir)
             save_dir.mkdir(parents=True, exist_ok=True)
-            plt.savefig(save_dir / "shap_bar.png", dpi=150, bbox_inches="tight")
+            plt.savefig(save_dir / "shap_bar.png", dpi=FIG_DPI,
+                        bbox_inches="tight", facecolor=BG_DARK)
             logger.info("Saved SHAP bar plot.")
 
         fig = plt.gcf()

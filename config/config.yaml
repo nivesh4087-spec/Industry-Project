@@ -4,9 +4,9 @@
 # ============================================================================
 
 project:
-  name: "XAI Predictive Maintenance System"
-  version: "1.0.0"
-  description: "Explainable AI-Based Manufacturing Failure Prediction for Smart Ceiling Fan Production"
+  name: "AI-Powered Predictive Maintenance Platform"
+  version: "2.0.0"
+  description: "Intelligent Failure Prediction & Risk Intelligence for Ceiling Fan Manufacturing Operations"
   author: "Nivesh"
   random_seed: 42
 
@@ -271,3 +271,11 @@ demo_scenarios:
       torque_nm: 72.0
       tool_wear_min: 220
       type: 0  # L
+
+# --- Business Cost Parameters ---
+business:
+  downtime_cost_per_hour: 10000.0  # Cost of unscheduled downtime (labor, idle line, missed SLAs)
+  avg_downtime_hours: 4.0          # Average hours to restore tool/machine after failure
+  preventive_action_cost: 1500.0   # Cost of planned intervention (preventive repair/check)
+  false_alarm_cost: 1500.0         # Cost of inspection/parts if model predicts failure but none occurred
+  license_cost_monthly: 2500.0     # SaaS/deployment operating cost for the AI system

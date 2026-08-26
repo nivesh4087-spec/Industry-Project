@@ -1,6 +1,6 @@
 """
-Page 6 — Monitoring & Alerts
-==============================
+Monitoring & Alerts Module
+==========================
 Prediction history, alert feed, and risk distribution monitoring.
 """
 

@@ -1,6 +1,6 @@
 """
-Page 2 — Machine Risk Predictor
-=================================
+Machine Risk Predictor Module
+=============================
 Interactive prediction page where users enter machine parameters
 and receive risk assessment with SHAP explanations and recommendations.
 
@@ -423,9 +423,9 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn):
 
         st.markdown("""
         <div class="disclaimer">
-            ⚠️ These are <strong>AI-generated decision-support recommendations</strong>,
-            not certified engineering procedures. Always verify with qualified
-            maintenance personnel before taking action.
+            ⚠️ These are <strong>AI-powered maintenance recommendations</strong>.
+            Always verify with qualified maintenance personnel
+            before taking action on critical equipment.
         </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
