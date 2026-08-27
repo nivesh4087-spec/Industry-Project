@@ -13,58 +13,48 @@ def get_custom_css() -> str:
        GLOBAL STYLES — Enterprise Industrial AI Theme v3.0
        ================================================================ */
 
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     :root {
-        --bg-primary: #07090e;
-        --bg-secondary: #0f131c;
-        --bg-card: #151b27;
-        --bg-card-hover: #1c2436;
-        --bg-glass: rgba(21, 27, 39, 0.85);
-        --border-color: #232d3f;
-        --border-glow: rgba(59, 130, 246, 0.5);
+        --bg-main: #090d16;
+        --bg-sidebar: #060910;
+        --bg-card: #111827;
+        --bg-card-hover: #1f2937;
+        --border-subtle: #1f2937;
+        --border-medium: #374151;
         
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --text-muted: #6b7280;
         
-        --accent-blue: #3b82f6;
-        --accent-cyan: #06b6d4;
-        --accent-green: #10b981;
-        --accent-yellow: #f59e0b;
-        --accent-orange: #f97316;
-        --accent-red: #ef4444;
-        --accent-indigo: #6366f1;
+        --status-normal: #10b981;
+        --status-warning: #f59e0b;
+        --status-danger: #ef4444;
+        --status-info: #3b82f6;
         
-        --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-        --gradient-dark: linear-gradient(180deg, #0f131c 0%, #07090e 100%);
-        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        
-        --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.2);
-        
-        --radius-sm: 6px;
-        --radius: 10px;
-        --radius-lg: 16px;
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
     }
 
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        background-color: var(--bg-main) !important;
+        color: var(--text-primary) !important;
     }
 
-    code, pre {
+    code, pre, .mono-text {
         font-family: 'JetBrains Mono', monospace !important;
     }
 
     .stApp {
-        background: var(--bg-primary) !important;
+        background: var(--bg-main) !important;
     }
 
     .main .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1.25rem !important;
         padding-bottom: 2rem !important;
-        max-width: 1400px !important;
+        max-width: 1440px !important;
     }
 
     /* Hide Streamlit Auto-Generated Multi-Page Navigation Links */
@@ -74,34 +64,35 @@ def get_custom_css() -> str:
 
     /* Sidebar Navigation */
     section[data-testid="stSidebar"] {
-        background: #0b0e14 !important;
-        border-right: 1px solid var(--border-color) !important;
+        background: var(--bg-sidebar) !important;
+        border-right: 1px solid var(--border-subtle) !important;
     }
 
     section[data-testid="stSidebar"] .stRadio > div {
-        gap: 4px !important;
+        gap: 3px !important;
     }
 
     section[data-testid="stSidebar"] .stRadio > div > label {
-        padding: 12px 16px !important;
-        border-radius: var(--radius-sm) !important;
-        transition: all 0.2s ease !important;
+        padding: 10px 14px !important;
+        border-radius: var(--radius-md) !important;
+        transition: all 0.15s ease !important;
         cursor: pointer !important;
         background: transparent !important;
         border-left: 3px solid transparent !important;
         font-weight: 500 !important;
-        font-size: 0.9rem !important;
+        font-size: 0.88rem !important;
+        color: var(--text-secondary) !important;
     }
 
     section[data-testid="stSidebar"] .stRadio > div > label:hover {
-        background: rgba(255, 255, 255, 0.03) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
         color: var(--text-primary) !important;
     }
 
     section[data-testid="stSidebar"] .stRadio > div > label[data-checked="true"],
     section[data-testid="stSidebar"] .stRadio > div > label:has(input:checked) {
         background: rgba(59, 130, 246, 0.1) !important;
-        border-left-color: var(--accent-blue) !important;
+        border-left-color: var(--status-info) !important;
         color: #ffffff !important;
         font-weight: 600 !important;
     }
@@ -344,3 +335,12 @@ def render_validation_item(text: str, is_valid: bool = True) -> str:
     icon = "✅" if is_valid else "⚠️"
     color = "var(--accent-green)" if is_valid else "var(--accent-yellow)"
     return f'<div style="margin: 4px 0; font-size: 0.88rem;"><span style="color:{color};">{icon}</span> {text}</div>'
+
+__all__ = [
+    "get_custom_css",
+    "render_kpi_card",
+    "render_risk_badge",
+    "render_header_banner",
+    "render_status_badge",
+    "render_validation_item",
+]

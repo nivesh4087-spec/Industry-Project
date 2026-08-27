@@ -89,6 +89,10 @@ def init_session_state():
     if "current_page" not in st.session_state:
         st.session_state.current_page = "Asset Health Monitor"
 
+    if "tutorial_seen" not in st.session_state:
+        st.session_state.show_tutorial = True
+        st.session_state.tutorial_seen = True
+
 init_session_state()
 
 # ============================================================================
@@ -100,28 +104,26 @@ def render_sidebar():
     with st.sidebar:
         # Brand header
         st.markdown("""
-        <div style="text-align: center; padding: 16px 0 10px 0;">
-            <div style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(59,130,246,0.4));">🛡️</div>
-            <div style="font-size: 1.1rem; font-weight: 800; color: #f8fafc;
-                        letter-spacing: -0.02em; margin-top: 4px;">
-                ENTERPRISE APM
+        <div style="padding: 12px 4px 10px 4px;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #f3f4f6; letter-spacing: -0.01em;">
+                INDUSTRIAL APM CENTER
             </div>
-            <div style="font-size: 0.65rem; color: #3b82f6; font-weight: 700;
-                        letter-spacing: 0.15em; text-transform: uppercase;">
-                AI Predictive Maintenance
+            <div style="font-size: 0.68rem; color: #3b82f6; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;">
+                Predictive Maintenance & Inspection
             </div>
         </div>
-        <hr style="border-color: #232d3f; margin: 12px 0;">
+        <hr style="border-color: #1f2937; margin: 8px 0 14px 0;">
         """, unsafe_allow_html=True)
 
         # Navigation Streamlined & Professional
         pages = {
-            "⚡ Asset Health Monitor": "Asset Health Monitor",
-            "🎯 Predictive Risk Assessment": "Predictive Risk Assessment",
-            "🧠 AI Diagnostics & SHAP": "AI Diagnostics & SHAP",
-            "📊 Financial ROI & Models": "Financial ROI & Models",
-            "📤 Batch Fleet Analysis": "Batch Fleet Analysis",
-            "🔔 Fleet Alerts": "Fleet Alerts",
+            "Asset Health Monitor": "Asset Health Monitor",
+            "Predictive Risk Assessment": "Predictive Risk Assessment",
+            "AI Diagnostics & SHAP": "AI Diagnostics & SHAP",
+            "False Ceiling Defect Inspection": "False Ceiling Defect Inspection",
+            "Financial ROI & Models": "Financial ROI & Models",
+            "Batch Fleet Analysis": "Batch Fleet Analysis",
+            "Fleet Alerts": "Fleet Alerts",
         }
 
         selected = st.radio(
@@ -218,6 +220,7 @@ def render_tutorial_dialog():
     """)
     if st.button("Got it! Let's get started", use_container_width=True, type="primary"):
         st.session_state.show_tutorial = False
+        st.session_state.tutorial_seen = True
         st.rerun()
 
 def main():
@@ -241,6 +244,10 @@ def main():
         elif page == "AI Diagnostics & SHAP":
             from app.pages.explainable_ai import render_page
             render_page(project_root, load_artifacts, load_raw_dataset, load_results_json)
+
+        elif page == "False Ceiling Defect Inspection":
+            from app.pages.ceiling_inspection import render_page
+            render_page(project_root, load_artifacts, load_raw_dataset)
 
         elif page == "Financial ROI & Models":
             from app.pages.model_comparison import render_page

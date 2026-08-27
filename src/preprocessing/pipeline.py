@@ -105,6 +105,9 @@ def encode_type_column(
 
     if col_name in df.columns:
         df[col_name] = df[col_name].map(encoding)
+        if df[col_name].isnull().any():
+            logger.warning("Unseen or null values found in '%s' column. Filling with 0.", col_name)
+            df[col_name] = df[col_name].fillna(0)
         logger.info("Encoded '%s' column: %s", col_name, encoding)
 
     return df

@@ -18,7 +18,7 @@ def render_page(project_root, load_artifacts_fn, load_dataset_fn, load_results_f
     """Render the Asset Health Monitor / Executive Overview page."""
 
     st.markdown(render_header_banner(
-        "⚡ Asset Health Command Center",
+        "Asset Health Command Center",
         "Real-time Equipment Fleet Monitoring & Fail-Safe Diagnostic System",
         f"Telemetry active • Last sync: {datetime.now().strftime('%H:%M:%S')} UTC"
     ), unsafe_allow_html=True)

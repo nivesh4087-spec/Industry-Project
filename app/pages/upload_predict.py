@@ -19,10 +19,17 @@ from pathlib import Path
 import plotly.graph_objects as go
 from datetime import datetime
 
-from app.components.styles import (
-    render_header_banner, render_kpi_card, render_risk_badge,
-    render_status_badge, render_validation_item,
-)
+try:
+    from app.components.styles import (
+        render_header_banner, render_kpi_card, render_risk_badge,
+        render_status_badge, render_validation_item,
+    )
+except ImportError:
+    from app.components.styles import render_header_banner, render_kpi_card, render_risk_badge, render_status_badge
+    def render_validation_item(text: str, is_valid: bool = True) -> str:
+        icon = "✅" if is_valid else "⚠️"
+        color = "var(--accent-green)" if is_valid else "var(--accent-yellow)"
+        return f'<div style="margin: 4px 0; font-size: 0.88rem;"><span style="color:{color};">{icon}</span> {text}</div>'
 
 # Required columns for prediction (internal names -> friendly labels)
 REQUIRED_COLUMNS = {
@@ -122,23 +129,77 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
     ])
     sample_csv = sample_df.to_csv(index=False)
 
-    # Input Option Section
+    # Input Option Section (Tabs for File Upload, Database Connection, and Sample Dataset)
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### 📥 Select Data Input Source")
-    st.write("Upload a custom file, download a formatted CSV template, or automatically load sample production fleet dataset for instant batch analysis.")
 
-    btn_col1, btn_col2 = st.columns(2)
-    with btn_col1:
+    source_tab1, source_tab2, source_tab3 = st.tabs([
+        "📂 Upload File (CSV / Excel)",
+        "🗄️ Connect External Database",
+        "🚀 Sample Fleet Telemetry"
+    ])
+
+    with source_tab1:
+        st.write("Upload a CSV or Excel workbook from your computer:")
         st.download_button(
             label="📄 Download CSV Template",
             data=sample_csv,
             file_name="fleet_sensor_template.csv",
             mime="text/csv",
-            use_container_width=True,
             help="Download a pre-formatted CSV template containing required sensor columns"
         )
-    with btn_col2:
-        if st.button("🚀 Load Sample Production Fleet Data (1,000 Assets)", use_container_width=True, type="secondary"):
+        uploaded_file = st.file_uploader(
+            "Upload File",
+            type=["csv", "xlsx", "xls"],
+            help="Upload a CSV or Excel file containing machine sensor data",
+            key="page_file_uploader"
+        )
+        if uploaded_file is not None:
+            try:
+                if uploaded_file.name.endswith((".xlsx", ".xls")):
+                    df_uploaded = pd.read_excel(uploaded_file)
+                else:
+                    df_uploaded = pd.read_csv(uploaded_file)
+                st.session_state["uploaded_dataset"] = df_uploaded
+                st.session_state["uploaded_filename"] = uploaded_file.name
+                if "batch_results" in st.session_state:
+                    del st.session_state["batch_results"]
+                st.success(f"✅ Loaded '{uploaded_file.name}' with {len(df_uploaded)} records.")
+            except Exception as e:
+                st.error(f"❌ Failed to read file: {e}")
+
+    with source_tab2:
+        st.markdown("##### Connect to Enterprise Relational or NoSQL Databases")
+        st.write("Stream sensor telemetry live from SQL or Cloud database engines:")
+        db_col1, db_col2 = st.columns([1, 2])
+        with db_col1:
+            db_type = st.selectbox("Database Engine", [
+                "PostgreSQL", "MySQL", "SQLite", "MongoDB", "Snowflake", "Oracle", "Microsoft SQL Server"
+            ], key="page_db_type")
+        with db_col2:
+            conn_str = st.text_input("Connection URI", placeholder="postgresql://user:password@localhost:5432/telemetry_db", key="page_conn_str")
+        query_str = st.text_input("Table / SQL Query", value="SELECT * FROM equipment_telemetry LIMIT 1000", key="page_query_str")
+
+        if st.button("🔌 Connect & Import Database Records", type="primary", key="page_db_connect_btn"):
+            if conn_str.strip():
+                with st.spinner(f"Connecting to {db_type}..."):
+                    try:
+                        from src.data.loader import load_from_database
+                        df_db = load_from_database(db_type, conn_str, query_str)
+                        st.session_state["uploaded_dataset"] = df_db
+                        st.session_state["uploaded_filename"] = f"{db_type}_telemetry_table"
+                        if "batch_results" in st.session_state:
+                            del st.session_state["batch_results"]
+                        st.success(f"Successfully connected to {db_type}! Imported {len(df_db):,} records.")
+                        st.rerun()
+                    except Exception as err:
+                        st.error(f"❌ Database connection failed: {err}")
+            else:
+                st.warning("⚠️ Please provide a valid database Connection URI.")
+
+    with source_tab3:
+        st.write("Instant one-click sample data loading from 1,000 production machines:")
+        if st.button("🚀 Load Sample Production Fleet Data (1,000 Assets)", type="secondary", key="page_sample_btn"):
             if load_raw_dataset_fn is not None:
                 df_raw = load_raw_dataset_fn()
                 st.session_state["uploaded_dataset"] = df_raw.head(1000).copy()
@@ -148,27 +209,6 @@ def render_page(project_root, load_artifacts_fn, load_raw_dataset_fn=None):
                 st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # File Uploader
-    uploaded_file = st.file_uploader(
-        "Upload Dataset (CSV or Excel)",
-        type=["csv", "xlsx", "xls"],
-        help="Upload a CSV or Excel file containing machine sensor data",
-    )
-
-    if uploaded_file is not None:
-        try:
-            if uploaded_file.name.endswith((".xlsx", ".xls")):
-                df_uploaded = pd.read_excel(uploaded_file)
-            else:
-                df_uploaded = pd.read_csv(uploaded_file)
-            st.session_state["uploaded_dataset"] = df_uploaded
-            st.session_state["uploaded_filename"] = uploaded_file.name
-            if "batch_results" in st.session_state:
-                del st.session_state["batch_results"]
-        except Exception as e:
-            st.error(f"❌ Failed to read file: {e}")
-            return
 
     # Check if a dataset exists in session state
     if "uploaded_dataset" not in st.session_state:

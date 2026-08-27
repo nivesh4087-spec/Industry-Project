@@ -264,7 +264,9 @@ def get_recommendation_summary(
 
     summary = []
     for rec in recommendations[:3]:
-        primary_action = rec["recommendations"][0] if rec["recommendations"] else "Review conditions."
-        summary.append(f"{rec['icon']} {primary_action}")
+        actions = rec.get("recommendations", [])
+        primary_action = actions[0] if isinstance(actions, list) and actions else "Review conditions."
+        icon = rec.get("icon", "⚠️")
+        summary.append(f"{icon} {primary_action}")
 
     return summary
