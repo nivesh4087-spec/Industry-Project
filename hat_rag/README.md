@@ -12,7 +12,9 @@ HAT-RAG solves context fragmentation, token overconsumption, and high retrieval 
 
 ## 📚 Comprehensive Project Documentation
 
-Detailed system documentation and architectural reports are available in both `docs/GIT/` and `hat_rag/docs/`:
+![HAT-RAG Master Methodology Mindmap](docs/images/rag_master_methodology_mindmap.svg)
+
+Detailed system documentation and architectural reports are available in both `docs/` and `docs/GIT/`:
 
 1. **[RAG Methodology Flowchart & System Workflow](docs/RAG_METHODOLOGY_FLOWCHART.md)** (`docs/GIT/RAG_METHODOLOGY_FLOWCHART.md`): Complete end-to-end flowchart (Mermaid & ASCII), step-by-step methodology breakdown, CUDA hardware engine, and JSON data schemas.
 2. **[50% Work Completed Documentation Report](docs/RAG_50_PERCENT_COMPLETION_REPORT.md)** (`docs/GIT/RAG_50_PERCENT_COMPLETION_REPORT.md`): Detailed milestone breakdown comparing 50% baseline features vs 100% finished system, architecture snapshot, test metrics, and speedup deltas.

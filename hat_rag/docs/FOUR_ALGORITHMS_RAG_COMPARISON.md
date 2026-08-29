@@ -6,6 +6,31 @@
 
 To solve the complex problem of **Cross-Document Knowledge Retrieval and Answer Synthesis**, four distinct architectural algorithms have been implemented, tested, and benchmarked within the `hat_rag/src/multi_approach.py` framework.
 
+### 🎨 4-Algorithm Comparative Mindmap Hub
+
+![4 RAG Algorithms Comparative Mindmap](./images/rag_4_algorithms_mindmap.svg)
+
+```mermaid
+mindmap
+  root((🔄 Multi-Approach RAG Engine))
+    Approach 1 HAT-RAG
+      Top-Down Logarithmic Traversal
+      Complexity: O(k log N)
+      Nodes Evaluated: ~25% (Prunes 75%)
+    Approach 2 Flat Vector RAG
+      Global Brute-Force Cosine Scan
+      Complexity: O(N)
+      Nodes Evaluated: 100% Leaf Passages
+    Approach 3 Graph-RAG
+      Entity Relation Multi-Hop Traversal
+      Complexity: O(V + E)
+      Knowledge Graph Concept Bridges
+    Approach 4 RAPTOR-Style RAG
+      Collapsed Multi-Level Indexing
+      Complexity: O(N_all)
+      Scans Abstract & Leaf Nodes Simultaneously
+```
+
 Each algorithm addresses document chunking, vector indexing, search traversal, and context assembly using fundamentally different computational models:
 
 1. **Approach 1: HAT-RAG (Hierarchical Abstract Tree with Top-Down Logarithmic Traversal)**

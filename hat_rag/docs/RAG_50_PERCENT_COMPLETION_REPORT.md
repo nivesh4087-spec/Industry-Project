@@ -35,6 +35,27 @@ This document outlines the system state at the 50% stage, detailing completed ba
 
 At the 50% mark, the project operated as a standard **Flat Dense Vector RAG System**.
 
+### 🎨 50% Milestone vs 100% System Mindmap Architecture
+
+![50% Work Completed vs 100% System Architecture Mindmap](./images/rag_50percent_architecture_mindmap.svg)
+
+```mermaid
+mindmap
+  root((📊 Project Evolution Hub))
+    50% Baseline System
+      Flat Vector Index (1D Unstructured Array)
+      Single-Threaded CPU Math Engine
+      Linear Search Complexity O(N)
+      Uncited Raw Passages Context
+      Average Latency: ~45ms
+    100% Production HAT-RAG System
+      Hierarchical Abstract Tree (Multi-Tier)
+      PyTorch CUDA GPU VRAM Acceleration
+      Logarithmic Traversal Complexity O(k log N)
+      Cited Passages with Document Source Links [1]
+      Average Latency: ~8.4ms (5.38x Speedup)
+```
+
 ### Architecture Diagram (50% Baseline State)
 
 ```mermaid

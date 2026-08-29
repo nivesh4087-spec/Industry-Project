@@ -17,7 +17,35 @@ HAT-RAG solves these challenges by constructing a **multi-tiered hierarchical tr
 
 ## 🏗️ Master System Methodology Flowchart
 
-### 1. Visual Flowchart (Mermaid Diagram)
+### 1. Dark-Mode Mindmap Hub Architecture
+
+![HAT-RAG Master Methodology Mindmap](./images/rag_master_methodology_mindmap.svg)
+
+```mermaid
+mindmap
+  root((🎯 HAT-RAG Core Engine))
+    Phase 1 Data Ingestion
+      Raw PDF & Text Parser
+      Sliding Window Chunker (512/50)
+    Phase 2 & 3 HAT Indexing
+      Recursive K-Means Vector Clustering
+      BART Abstractive Summarization
+      Multi-Tier Tree Architecture
+    Phase 4 PyTorch CUDA
+      VRAM Batch Tensor Operations
+      5.38x Vector Search Speedup
+    Phase 5 Top Down Search
+      Logarithmic Traversal O(k log N)
+      70% Search Space Pruning
+    Phase 6 LLM Generator
+      Context Window Assembly
+      Structured Source Citations [1]
+    Phase 7 Benchmarking
+      Latency Tracking Suite
+      Recall & Precision Evaluation
+```
+
+### 2. Visual Flowchart (Mermaid Diagram)
 
 ```mermaid
 flowchart TD
