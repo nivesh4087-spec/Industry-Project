@@ -37,7 +37,7 @@ Detailed system documentation and architectural reports are available in both `d
 | **8. Web Interactive Dashboard (`app.py`)** | ✅ 100% Completed | Interactive Streamlit Web UI featuring executive metrics, document builder, real-time RAG query engine, and benchmark inspector. |
 | **9. REST API Service (`api.py`)** | ✅ 100% Completed | FastAPI REST API endpoints (`/health`, `/ingest`, `/query`, `/benchmark`) for microservice deployment. |
 | **10. 4 Architectural Approaches (`src/multi_approach.py`)** | ✅ 100% Completed | Implements **HAT-RAG (Top-Down Logarithmic)**, **Flat Vector RAG**, **Graph-RAG (Multi-Hop Entity Traversal)**, and **RAPTOR-style Tree RAG**. |
-| **11. Research Paper Repository (`papers/`)** | ✅ 100% Completed | Curated collection of **29 seminal research papers** (PDFs, JSON Index & Manifest) on RAG, Hierarchical Trees, Graph RAG, and CUDA acceleration. |
+| **11. Research Paper Repository (`papers/`)** | ✅ 100% Completed | Curated collection of **29 seminal research papers** (PDFs, JSON Index, Manifest & [Deep-Dive Synthesis Document](docs/RESEARCH_PAPERS_SUMMARY_DOCUMENTATION.md)) on RAG, Hierarchical Trees, Graph RAG, and CUDA acceleration. |
 | **12. Comprehensive Unit Test Suite (`run_tests.py`, `tests/`)** | ✅ 100% Completed | Unittest / PyTest suite verifying CUDA tensor ops, tree building, 4 approaches, and evaluation metrics. |
 
 
