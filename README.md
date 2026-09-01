@@ -32,21 +32,6 @@ provides explainable risk intelligence via SHAP, and delivers actionable mainten
 - [Project Structure](#-project-structure)
 - [Industry Application](#-industry-application)
 - [Authors](#-authors)
-- [RAG Project & Algorithm Documentation](#-rag-project--algorithm-documentation)
-
-
----
-
-## 🤖 RAG Project & Algorithm Documentation
-
-The repository includes complete technical documentation and visual flowcharts for the **Hierarchical Abstract Tree Retrieval-Augmented Generation (HAT-RAG)** system accelerated via **NVIDIA CUDA GPU Computing**:
-
-![HAT-RAG Master Methodology Mindmap](docs/GIT/images/rag_master_methodology_mindmap.svg)
-
-- 📜 **[RAG Methodology Flowchart & System Workflow](docs/GIT/RAG_METHODOLOGY_FLOWCHART.md)**: End-to-end data processing flowchart (Mermaid & SVG), 7-phase methodology, CUDA GPU acceleration tensor engine, and JSON node data model.
-- 📊 **[50% Work Completed Documentation Report](docs/GIT/RAG_50_PERCENT_COMPLETION_REPORT.md)**: Baseline 50% flat RAG state vs 100% finished system, module completion percentage matrix, test coverage, and latency deltas.
-- ⚙️ **[4 RAG Algorithms Deep-Dive & Comparison](docs/GIT/FOUR_ALGORITHMS_RAG_COMPARISON.md)**: Comparative analysis of **HAT-RAG**, **Flat Vector RAG**, **Graph-RAG**, and **RAPTOR-Style RAG**, including individual flowchart diagrams, $O$-complexity analysis, and algorithm selection decision matrix.
-- 📚 **[29 Downloaded Research Papers Comprehensive Synthesis](docs/GIT/RESEARCH_PAPERS_SUMMARY_DOCUMENTATION.md)**: Detailed breakdown, key findings, core mechanisms, experimental results, and HAT-RAG integration for all 29 downloaded research papers.
 
 
 ---
