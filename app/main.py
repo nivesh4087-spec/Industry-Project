@@ -21,13 +21,17 @@ if app_dir in sys.path:
     sys.path.remove(app_dir)
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
-else:
-    sys.path.remove(str(project_root))
-    sys.path.insert(0, str(project_root))
 
 import streamlit as st
 import json
 import logging
+
+# Resolve installed SHAP version for display (graceful fallback if not installed)
+try:
+    import shap as _shap
+    shap_ver = _shap.__version__
+except Exception:
+    shap_ver = "N/A"
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -150,7 +154,7 @@ def render_sidebar():
             </div>
             <div style="margin-bottom: 4px;">🟢 <strong>Engine Status</strong>: Active</div>
             <div style="margin-bottom: 4px;">{upload_indicator}</div>
-            <div style="margin-bottom: 4px;">⚡ <strong>Explainability</strong>: SHAP v0.42</div>
+            <div style="margin-bottom: 4px;">⚡ <strong>Explainability</strong>: SHAP v{shap_ver}</div>
             <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #1e293b;">
                 <span style="color: #94a3b8;">System Version</span>: v3.0.0 Pro
             </div>

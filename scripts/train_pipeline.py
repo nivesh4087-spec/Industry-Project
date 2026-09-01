@@ -385,7 +385,7 @@ def main():
     logger.info("Artifacts saved to: %s", project_root / config["artifacts"]["model_dir"])
     logger.info("Figures saved to: %s", figures_dir)
     logger.info("Results saved to: %s", results_dir)
-    logger.info("\nRun the dashboard: streamlit run app/app.py")
+    logger.info("\nRun the dashboard: streamlit run app/main.py")
     logger.info("=" * 70)
 
 

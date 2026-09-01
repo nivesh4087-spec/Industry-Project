@@ -12,6 +12,9 @@ build/
 venv/
 env/
 .env
+.venv/
+*.venv
+poetry.lock
 
 # IDE
 .vscode/
@@ -27,12 +30,18 @@ desktop.ini
 
 # Jupyter
 .ipynb_checkpoints/
+*.ipynb
 
 # Data (raw data should be downloaded, not committed)
 data/raw/*.csv
 data/raw/*.zip
 data/processed/*.csv
 data/processed/*.pkl
+
+# Dataset files in project root (use data/raw/ instead)
+ai4i2020.csv
+ai4i+2020+predictive+maintenance+dataset.zip
+*.zip
 
 # Model artifacts (too large for git)
 models/*.joblib
@@ -55,3 +64,17 @@ reports/results/*.csv
 
 # Logs
 *.log
+
+# Assignment / submission documents (do not commit Word/PDF docs)
+*.docx
+*.pdf
+ps_doc.docx
+
+# Compiled binaries / build outputs
+bin/
+
+# Test coverage & type checking caches
+.coverage
+htmlcov/
+.mypy_cache/
+.pytest_cache/

@@ -177,6 +177,7 @@ def download_dataset(config: Dict[str, Any]) -> Path:
     return csv_path
 
 
+
 def load_from_database(db_type: str, connection_string: str, query_or_table: str) -> pd.DataFrame:
     """Load dataset directly from an external database (PostgreSQL, MySQL, SQLite, MongoDB, Snowflake)."""
     try:

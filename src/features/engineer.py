@@ -158,8 +158,7 @@ def engineer_features(
     # 5. Power factor (torque × speed proxy)
     df["power_factor"] = df["torque_nm"] * df["rotational_speed_rpm"]
 
-    # 6. Temperature-speed interaction
-    df["temp_diff"] = df["process_temp_k"] - df["air_temp_k"]
+    # 6. Temperature-speed interaction (temp_diff already computed above)
     df["temp_rpm_interaction"] = df["temp_diff"] * df["rotational_speed_rpm"]
 
     # --- Binned / Categorical Features ---
